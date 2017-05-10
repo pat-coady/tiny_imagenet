@@ -1,0 +1,10 @@
+
+# model checkpoints and logs
+.idea/
+src/.ipynb_checkpoints/
+src/__pycache__/
+src/checkpoints/
+src/tf_logs/
+
+# data
+tiny-imagenet-200/
