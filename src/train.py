@@ -6,6 +6,8 @@ from losses import *
 from input_pipe import *
 from datetime import datetime
 import numpy as np
+import time
+
 
 
 class TrainConfig(object):
@@ -118,6 +120,7 @@ def validate(config):
 
 
 def main():
+  start_time = time.time()
   tf.logging.set_verbosity(tf.logging.ERROR)
   config = TrainConfig()
   g = tf.Graph()
@@ -161,6 +164,7 @@ def main():
       finally:
         coord.request_stop()
         coord.join(threads)
+  print("--- %s seconds ---" % (time.time() - start_time))
 
 
 if __name__ == "__main__":
