@@ -9,14 +9,13 @@ import numpy as np
 import time
 
 
-
 class TrainConfig(object):
   """Training configuration"""
   batch_size = 64
   num_epochs = 2
-  summary_interval = 50
+  summary_interval = 10
   save_every = 1500
-  lr = 0.001
+  lr = 0.01
   momentum = 0.9
   dropout = False
   dropout_keep_prob = 0.5
@@ -39,17 +38,6 @@ def optimizer(loss, config):
   optim = tf.train.MomentumOptimizer(config.lr, config.momentum,
                                      use_nesterov=True)
   train_op = optim.minimize(loss, global_step=global_step)
-
-  # beta = tf.Variable(0.0000001, trainable=False, name='beta')
-  # global_step = tf.Variable(0, trainable=False, name='global_step')
-  # opt = tf.train.MomentumOptimizer(learning_rate=1.0, momentum=0.9, use_nesterov=True)
-  # grads_and_vars = opt.compute_gradients(loss)
-  # ssq = []
-  # for gv_pair in grads_and_vars:
-  #   ssq.append(tf.reduce_sum(tf.square(gv_pair[0])))
-  # alpha = beta * loss / tf.add_n(ssq)
-  # scaled_grads_and_vars = [(gv[0] * alpha, gv[1]) for gv in grads_and_vars]
-  # train_op = opt.apply_gradients(scaled_grads_and_vars, global_step=global_step)
 
   return train_op, global_step
 
