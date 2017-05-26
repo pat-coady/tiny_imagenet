@@ -13,7 +13,7 @@ class TrainConfig(object):
   """Training configuration"""
   batch_size = 64
   num_epochs = 2
-  summary_interval = 10
+  summary_interval = 100
   save_every = 1500
   lr = 0.01
   momentum = 0.9
