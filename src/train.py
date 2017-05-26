@@ -12,12 +12,12 @@ import time
 class TrainConfig(object):
   """Training configuration"""
   batch_size = 64
-  num_epochs = 2
+  num_epochs = 5
   summary_interval = 100
   save_every = 1500
   lr = 0.01
   momentum = 0.9
-  dropout = False
+  dropout = True
   dropout_keep_prob = 0.5
   model_name = 'conv_pool_net'
   model = staticmethod(globals()[model_name])
@@ -61,7 +61,8 @@ def model_wrapper(mode, config):
   Returns:
     loss and accuracy tensors
   """
-  imgs, labels = batch_q(mode, config)
+  with tf.device('/cpu:0'):
+    imgs, labels = batch_q(mode, config)
 
   imgs = tf.cast(imgs, tf.float32)
   imgs = (imgs - 128.0) / 128.0  # center and scale image data
@@ -92,6 +93,7 @@ def validate(config):
         while not coord.should_stop():
           iters += 1
           step_loss, step_acc = sess.run([loss, acc])
+          print(step_loss)
           accs.append(step_acc)
           losses.append(step_loss)
           if iters > 20: break

@@ -12,8 +12,8 @@ def conv_conv_pool(x, chan_in, chan_out, config, name):
 
   conv1 = tf.nn.conv2d(x, kernel, [1, 1, 1, 1], 'SAME')
   relu1 = tf.nn.relu(conv1 + b)
-  if config.dropout:
-    relu1 = tf.nn.dropout(relu1, config.dropout_keep_prob)
+#  if config.dropout:
+#    relu1 = tf.nn.dropout(relu1, config.dropout_keep_prob)
   tf.summary.histogram(name+'_conv1', relu1)
 
   with tf.variable_scope(name+'_conv2',
@@ -27,7 +27,7 @@ def conv_conv_pool(x, chan_in, chan_out, config, name):
   relu2 = tf.nn.relu(conv2 + b)
   if config.dropout:
     relu2 = tf.nn.dropout(relu2, config.dropout_keep_prob)
-  tf.summary.histogram(name+'_conv2', relu1)
+  tf.summary.histogram(name+'_conv2', relu2)
 
   y = tf.nn.max_pool(relu2, [1, 2, 2, 1], [1, 2, 2, 1], padding='SAME')
   tf.summary.histogram(name+'_maxpool', y)
