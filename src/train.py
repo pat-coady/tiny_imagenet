@@ -145,7 +145,7 @@ def main():
           losses.append(step_loss)
           accs.append(step_acc)
           if step % config.save_every == 0:
-            saver.save(sess, ckpt_path, step)
+            saver.save(sess, ckpt_path + '/model', step)
             mean_loss, mean_acc = validate(ckpt_path)
             val_acc.load(mean_acc)
             val_loss.load(mean_loss)
