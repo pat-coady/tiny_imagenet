@@ -121,4 +121,4 @@ def batch_q(mode, config):
 
   return tf.train.batch(read_image(filename_q, mode),
                         config.batch_size, shapes=[(64, 64, 3), ()],
-                        capacity=4096, num_threads=4)
+                        capacity=1024, num_threads=4)
