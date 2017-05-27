@@ -12,8 +12,6 @@ def conv_conv_pool(x, chan_in, chan_out, config, name):
 
   conv1 = tf.nn.conv2d(x, kernel, [1, 1, 1, 1], 'SAME')
   relu1 = tf.nn.relu(conv1 + b)
-#  if config.dropout:
-#    relu1 = tf.nn.dropout(relu1, config.dropout_keep_prob)
   tf.summary.histogram(name+'_conv1', relu1)
 
   with tf.variable_scope(name+'_conv2',
@@ -21,12 +19,10 @@ def conv_conv_pool(x, chan_in, chan_out, config, name):
                                  (3 * 3 * chan_out)) ** 0.5),
                          dtype=tf.float32):
     kernel = tf.get_variable(shape=(3, 3, chan_out, chan_out), name='kernel')
-    b = tf.get_variable(shape=(chan_out,), name='b2')
+    b = tf.get_variable(shape=(chan_out,), name='b')
 
   conv2 = tf.nn.conv2d(relu1, kernel, [1, 1, 1, 1], 'SAME')
   relu2 = tf.nn.relu(conv2 + b)
-  if config.dropout:
-    relu2 = tf.nn.dropout(relu2, config.dropout_keep_prob)
   tf.summary.histogram(name+'_conv2', relu2)
 
   y = tf.nn.max_pool(relu2, [1, 2, 2, 1], [1, 2, 2, 1], padding='SAME')
@@ -66,6 +62,8 @@ def conv_pool_net(training_batch, config):
   flat1 = tf.reshape(ccp3, shape=(-1, 8192))
   fc1 = tf.nn.relu(tf.matmul(flat1, wfc1) + bfc1)
   tf.summary.histogram('fc1', fc1)
+  if config.dropout:
+    fc1 = tf.nn.dropout(fc1, config.dropout_keep_prob)
 
   # fc2
   # (N, 2048) -> (N, 1024)
@@ -77,6 +75,8 @@ def conv_pool_net(training_batch, config):
     bfc2 = tf.get_variable(shape=(1024,), name='bfc2')
   fc2 = tf.nn.relu(tf.matmul(fc1, wfc2) + bfc2)
   tf.summary.histogram('fc2', fc2)
+  if config.dropout:
+    fc2 = tf.nn.dropout(fc2, config.dropout_keep_prob)
 
   # fc3
   # (N, 1024) -> (N, 200)

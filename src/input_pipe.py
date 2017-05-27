@@ -83,6 +83,8 @@ def read_image(filename_q):
   label = item[1]
   file = tf.read_file(filename)
   img = tf.image.decode_jpeg(file, channels=3)
+  img = tf.cast(img, tf.float32)
+  img = (img - 128.0) / 128.0  # center and scale image data
   label = tf.string_to_number(label, tf.int32)
   label = tf.cast(label, tf.uint8)
 

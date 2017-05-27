@@ -12,7 +12,7 @@ import time
 class TrainConfig(object):
   """Training configuration"""
   batch_size = 64
-  num_epochs = 5
+  num_epochs = 15
   summary_interval = 100
   save_every = 1500
   lr = 0.01
@@ -64,8 +64,7 @@ def model_wrapper(mode, config):
   with tf.device('/cpu:0'):
     imgs, labels = batch_q(mode, config)
 
-  imgs = tf.cast(imgs, tf.float32)
-  imgs = (imgs - 128.0) / 128.0  # center and scale image data
+
   logits = config.model(imgs, config)
   softmax_ce_loss(logits, labels)
   acc = accuracy(logits, labels)
@@ -76,6 +75,7 @@ def model_wrapper(mode, config):
 
 def validate(config):
   """Load most recent checkpoint and run on validation set"""
+  config.dropout = False
   accs, losses = [], []
   with tf.Graph().as_default():
     loss, acc = model_wrapper('val', config)
@@ -105,6 +105,7 @@ def validate(config):
   mean_loss, mean_acc = np.mean(losses), np.mean(accs)
   print('Validation. Loss: {:.3f}, Accuracy: {:.4f}'.
         format(mean_loss, mean_acc))
+  config.dropout = True
 
   return mean_loss, mean_acc
 
