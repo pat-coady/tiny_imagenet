@@ -4,6 +4,7 @@ import glob
 import re
 import tensorflow as tf
 import random
+import numpy as np
 
 
 def load_filenames_labels(mode):
@@ -11,10 +12,11 @@ def load_filenames_labels(mode):
 
   Args:
     mode: 'train' or 'val'
-      (Directory structure and file naming different for train and val)
+      (Directory structure and file naming different for
+      train and val datasets)
 
   Returns:
-    filenames: list of tuples: (jpeg filename with path, label)
+    list of tuples: (jpeg filename with path, label)
   """
   label_dict, class_description = build_label_dicts()
   filenames_labels = []
@@ -43,12 +45,13 @@ def build_label_dicts():
     tiny-imagenet-200/words.txt
 
   Returns:
-    label_dict: 
-      keys = image directory string (e.g. "n01944390")
-      values = class integer {0 .. 199}
-    class_desc:
-      keys = class integer {0 .. 199}
-      values = text description from words.txt
+    tuple of dicts
+      label_dict: 
+        keys = synset (e.g. "n01944390")
+        values = class integer {0 .. 199}
+      class_desc:
+        keys = class integer {0 .. 199}
+        values = text description from words.txt
   """
   label_dict, class_description = {}, {}
   with open('../tiny-imagenet-200/wnids.txt', 'r') as f:
@@ -67,6 +70,8 @@ def build_label_dicts():
 
 def read_image(filename_q, mode):
   """Load next jpeg file from filename / label queue
+  Randomly applies distortions if mode == 'train' (including a 
+  random crop to [56, 56, 3]). Standardizes all images.
 
   Args:
     filename_q: Queue with 2 columns: filename string and label string.
@@ -86,9 +91,12 @@ def read_image(filename_q, mode):
   img = tf.image.decode_jpeg(file, channels=3)
   # image distortions: left/right, random hue, random color saturation
   if mode == 'train':
+    img = tf.random_crop(img, np.array([56, 56, 3]))
     img = tf.image.random_flip_left_right(img)
     img = tf.image.random_hue(img, 0.05)
     img = tf.image.random_saturation(img, 0.5, 2.0)
+  else:
+    img = tf.image.crop_to_bounding_box(img, 4, 4, 56, 56)
 
   img = tf.image.per_image_standardization(img)
   # TODO: Add noise?
@@ -113,12 +121,10 @@ def batch_q(mode, config):
   """
   filenames_labels = load_filenames_labels(mode)
   random.shuffle(filenames_labels)
-  if config.num_examples is not None:
-    filenames_labels = filenames_labels[:config.num_examples]
   filename_q = tf.train.input_producer(filenames_labels,
                                        num_epochs=config.num_epochs,
                                        shuffle=True)
 
   return tf.train.batch(read_image(filename_q, mode),
-                        config.batch_size, shapes=[(64, 64, 3), ()],
-                        capacity=1024, num_threads=4)
+                        config.batch_size, shapes=[(56, 56, 3), ()],
+                        capacity=2048, num_threads=2)

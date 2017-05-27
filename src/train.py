@@ -6,22 +6,22 @@ from losses import *
 from input_pipe import *
 from datetime import datetime
 import numpy as np
-import time
+import os
 
 
 class TrainConfig(object):
   """Training configuration"""
   batch_size = 64
   num_epochs = 15
-  summary_interval = 100
-  save_every = 1500
-  lr = 0.01/20
+  summary_interval = 10
+  save_every = 50
+  lr = 0.01
   momentum = 0.9
   dropout = True
   dropout_keep_prob = 0.5
   model_name = 'conv_pool_net'
   model = staticmethod(globals()[model_name])
-  num_examples = None  ## None: use all examples
+  experiment_name = 'initial_tune'
 
 
 def optimizer(loss, config):
@@ -44,9 +44,8 @@ def optimizer(loss, config):
 
 def get_logdir():
   """Return unique logdir based on datetime"""
-  now = datetime.utcnow().strftime("%Y%m%d%H%M%S")
-  root_logdir = "tf_logs"
-  logdir = "{}/run-{}/".format(root_logdir, now)
+  now = datetime.utcnow().strftime("%m%d%H%M%S")
+  logdir = "run-{}/".format(now)
 
   return logdir
 
@@ -73,19 +72,21 @@ def model_wrapper(mode, config):
   return total_loss, acc
 
 
-def validate(config):
+def validate(ckpt_path):
   """Load most recent checkpoint and run on validation set"""
-  config.dropout = False
+  config = TrainConfig()
+  config.dropout = False  # disable dropout for validation
   accs, losses = [], []
+
   with tf.Graph().as_default():
-    loss, acc = model_wrapper('val', config)
-    saver = tf.train.Saver()
-    init = tf.group(tf.global_variables_initializer(),
-                    tf.local_variables_initializer())
+    with tf.device('/cpu:0'):
+      loss, acc = model_wrapper('val', config)
+      saver = tf.train.Saver()
+      init = tf.group(tf.global_variables_initializer(),
+                      tf.local_variables_initializer())
     with tf.Session() as sess:
       init.run()
-      saver.restore(sess, tf.train.latest_checkpoint('checkpoints/' +
-                                                     config.model_name))
+      saver.restore(sess, tf.train.latest_checkpoint(ckpt_path))
       coord = tf.train.Coordinator()
       threads = tf.train.start_queue_runners(sess=sess, coord=coord)
       try:
@@ -93,7 +94,6 @@ def validate(config):
         while not coord.should_stop():
           iters += 1
           step_loss, step_acc = sess.run([loss, acc])
-          print(step_loss)
           accs.append(step_acc)
           losses.append(step_loss)
           if iters > 20: break
@@ -111,12 +111,15 @@ def validate(config):
 
 
 def main():
-  start_time = time.time()
-  tf.logging.set_verbosity(tf.logging.ERROR)
   config = TrainConfig()
   g = tf.Graph()
+  ckpt_path = 'checkpoints/' + config.model_name + '/' + config.experiment_name
+  tflog_path = ('tf_logs/' + config.model_name + '/' +
+                config.experiment_name + '/' + get_logdir())
+  if not os.path.isdir(ckpt_path):
+    os.makedirs(ckpt_path)
   with g.as_default():
-    writer = tf.summary.FileWriter(get_logdir(), g)
+    writer = tf.summary.FileWriter(tflog_path, g)
     loss, acc = model_wrapper('train', config)
     train_op, g_step = optimizer(loss, config)
     val_acc = tf.Variable(0.0, trainable=False)
@@ -131,8 +134,7 @@ def main():
     saver = tf.train.Saver()
     with tf.Session() as sess:
       init.run()
-      saver.restore(sess, tf.train.latest_checkpoint('checkpoints/' +
-                                                     config.model_name))
+      # saver.restore(sess, tf.train.latest_checkpoint(ckpt_path))
       coord = tf.train.Coordinator()
       threads = tf.train.start_queue_runners(sess=sess, coord=coord)
       try:
@@ -143,8 +145,8 @@ def main():
           losses.append(step_loss)
           accs.append(step_acc)
           if step % config.save_every == 0:
-            saver.save(sess, 'checkpoints/' + config.model_name + '/model', step)
-            mean_loss, mean_acc = validate(config)
+            saver.save(sess, ckpt_path, step)
+            mean_loss, mean_acc = validate(ckpt_path)
             val_acc.load(mean_acc)
             val_loss.load(mean_loss)
           if step % config.summary_interval == 0:
@@ -157,7 +159,6 @@ def main():
       finally:
         coord.request_stop()
         coord.join(threads)
-  print("--- %s seconds ---" % (time.time() - start_time))
 
 
 if __name__ == "__main__":

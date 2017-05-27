@@ -1,4 +1,12 @@
 ## Tiny ImageNet Model: convnet
+#
+# 1. conv-conv-maxpool (ReLU)
+# 2. conv-conv-maxpool (ReLU)
+# 3. conv-conv-maxpool (ReLU)
+# 4. fc-2048 (ReLU)
+# 5. fc-1024 (ReLU)
+# 6. softmax-200
+
 
 import tensorflow as tf
 
@@ -43,23 +51,23 @@ def conv_pool_net(training_batch, config):
   """
 
   tf.summary.histogram('img', training_batch)
-  # in: (N, 64, 64, 3), out: (N, 32, 32, 32)
+  # in: (N, 56, 56, 3), out: (N, 28, 28, 32)
   ccp1 = conv_conv_pool(training_batch, 3, 32, config, 'stack_1')
-  # in: (N, 32, 32, 32), out: (N, 16, 16, 64)
+  # in: (N, 28, 28, 32), out: (N, 14, 14, 64)
   ccp2 = conv_conv_pool(ccp1, 32, 64, config, 'stack_2')
-  # in: (N, 16, 16, 64), out: (N, 8, 8, 128)
+  # in: (N, 14, 14, 64), out: (N, 7, 7, 128)
   ccp3 = conv_conv_pool(ccp2, 64, 128, config, 'stack_3')
 
   # fc1: flatten -> fully connected layer, width = 1024
-  # (N, 8, 8, 128) -> (N, 8192) -> (N, 2048)
+  # (N, 7, 7, 128) -> (N, 6272) -> (N, 2048)
   with tf.variable_scope('fclayer1',
                          initializer=tf.truncated_normal_initializer(
-                           stddev=(2.0 / 8192) ** 0.5),
+                           stddev=(2.0 / 6272) ** 0.5),
                          dtype=tf.float32):
-    wfc1 = tf.get_variable(shape=(8192, 2048), name='wfc1')
+    wfc1 = tf.get_variable(shape=(6272, 2048), name='wfc1')
     bfc1 = tf.get_variable(shape=(2048,), name='bfc1')
 
-  flat1 = tf.reshape(ccp3, shape=(-1, 8192))
+  flat1 = tf.reshape(ccp3, shape=(-1, 6272))
   fc1 = tf.nn.relu(tf.matmul(flat1, wfc1) + bfc1)
   tf.summary.histogram('fc1', fc1)
   if config.dropout:
