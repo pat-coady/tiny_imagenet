@@ -13,8 +13,8 @@ class TrainConfig(object):
   """Training configuration"""
   batch_size = 64
   num_epochs = 15
-  summary_interval = 10
-  save_every = 50
+  summary_interval = 100
+  save_every = 1500
   lr = 0.01
   momentum = 0.9
   dropout = True
@@ -96,7 +96,7 @@ def validate(ckpt_path):
           step_loss, step_acc = sess.run([loss, acc])
           accs.append(step_acc)
           losses.append(step_loss)
-          if iters > 20: break
+          if iters > 40: break
       except tf.errors.OutOfRangeError as e:
         coord.request_stop(e)
       finally:
