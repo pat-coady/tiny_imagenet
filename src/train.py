@@ -15,7 +15,7 @@ class TrainConfig(object):
   num_epochs = 15
   summary_interval = 100
   save_every = 1500
-  lr = 0.01
+  lr = 0.01/5
   momentum = 0.9
   dropout = True
   dropout_keep_prob = 0.5
@@ -130,7 +130,9 @@ def main():
     summ = tf.summary.merge_all()
     saver = tf.train.Saver()
     with tf.Session() as sess:
-      init.run()
+      saver.restore(sess, tf.train.latest_checkpoint('checkpoints/' +
+                                                     config.model_name))
+      # init.run()
       coord = tf.train.Coordinator()
       threads = tf.train.start_queue_runners(sess=sess, coord=coord)
       try:
