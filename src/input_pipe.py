@@ -65,13 +65,14 @@ def build_label_dicts():
   return label_dict, class_description
 
 
-def read_image(filename_q):
+def read_image(filename_q, mode):
   """Load next jpeg file from filename / label queue
 
   Args:
     filename_q: Queue with 2 columns: filename string and label string.
      filename string is relative path to jpeg file. label string is text-
      formatted integer between '0' and '199'
+    mode: 'train' or 'val'
 
   Returns:
     [img, label]: 
@@ -83,8 +84,15 @@ def read_image(filename_q):
   label = item[1]
   file = tf.read_file(filename)
   img = tf.image.decode_jpeg(file, channels=3)
-  img = tf.cast(img, tf.float32)
-  img = (img - 128.0) / 128.0  # center and scale image data
+  # image distortions: left/right, random hue, random color saturation
+  if mode == 'train':
+    img = tf.image.random_flip_left_right(img)
+    img = tf.image.random_hue(img, 0.05)
+    img = tf.image.random_saturation(img, 0.5, 2.0)
+
+  img = tf.image.per_image_standardization(img)
+  # TODO: Add noise?
+
   label = tf.string_to_number(label, tf.int32)
   label = tf.cast(label, tf.uint8)
 
@@ -111,6 +119,6 @@ def batch_q(mode, config):
                                        num_epochs=config.num_epochs,
                                        shuffle=True)
 
-  return tf.train.batch(read_image(filename_q),
+  return tf.train.batch(read_image(filename_q, mode),
                         config.batch_size, shapes=[(64, 64, 3), ()],
                         capacity=4096)
