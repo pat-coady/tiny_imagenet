@@ -13,8 +13,8 @@ class TrainConfig(object):
   """Training configuration"""
   batch_size = 64
   num_epochs = 15
-  summary_interval = 100
-  save_every = 1500
+  summary_interval = 200
+  eval_interval = 100
   lr = 0.01
   momentum = 0.9
   dropout = True
@@ -23,6 +23,37 @@ class TrainConfig(object):
   model = staticmethod(globals()[model_name])
   experiment_name = 'initial_tune'
 
+
+class TrainControl(object):
+  def __init__(self, lr):
+    self.val_losses = []
+    self.lr = lr
+    self.num_lr_updates = 0
+    self.lr_factor = 1/5
+
+  def add_val_loss(self, loss):
+    self.val_losses.append(loss)
+
+  def update_lr(self, sess):
+    if len(self.val_losses) < 3:
+      return
+    decrease = False
+    if self.val_losses[-1] < self.val_losses[-2]:
+      decrease = True
+    prev_2 = (self.val_losses[-2] + self.val_losses[-3]) / 2
+    if abs(self.val_losses[-1] - prev_2) < 0.5:
+      decrease = True
+    if decrease:
+      old_lr = sess.run(self.lr)
+      self.lr.load(old_lr * self.lr_factor)
+      self.num_lr_updates += 1
+      print('*** New learning rate: {}'.format(old_lr * self.lr_factor))
+
+  def done(self):
+    if self.num_lr_updates > 4:
+      return True
+    else:
+      return False
 
 def optimizer(loss, config):
   """Add training operation, loss function and global step to Graph.
@@ -34,12 +65,13 @@ def optimizer(loss, config):
   Returns:
     tuple: (training operation, step loss, global step num) 
   """
+  lr = tf.Variable(config.lr, trainable=False, dtype=tf.float32)
   global_step = tf.Variable(0, trainable=False, name='global_step')
-  optim = tf.train.MomentumOptimizer(config.lr, config.momentum,
+  optim = tf.train.MomentumOptimizer(lr, config.momentum,
                                      use_nesterov=True)
   train_op = optim.minimize(loss, global_step=global_step)
 
-  return train_op, global_step
+  return train_op, global_step, lr
 
 
 def get_logdir():
@@ -50,7 +82,7 @@ def get_logdir():
   return logdir
 
 
-def model_wrapper(mode, config):
+def model(mode, config):
   """Wrap up: input data queue, regression model and loss functions 
 
   Args:
@@ -60,9 +92,9 @@ def model_wrapper(mode, config):
   Returns:
     loss and accuracy tensors
   """
+  # preprocess images on cpu
   with tf.device('/cpu:0'):
     imgs, labels = batch_q(mode, config)
-
 
   logits = config.model(imgs, config)
   softmax_ce_loss(logits, labels)
@@ -72,15 +104,16 @@ def model_wrapper(mode, config):
   return total_loss, acc
 
 
-def validate(ckpt_path):
+def evaluate(ckpt_path):
   """Load most recent checkpoint and run on validation set"""
   config = TrainConfig()
   config.dropout = False  # disable dropout for validation
+  config.num_epochs = 1
   accs, losses = [], []
 
   with tf.Graph().as_default():
     with tf.device('/cpu:0'):
-      loss, acc = model_wrapper('val', config)
+      loss, acc = model('val', config)
       saver = tf.train.Saver()
       init = tf.group(tf.global_variables_initializer(),
                       tf.local_variables_initializer())
@@ -96,7 +129,7 @@ def validate(ckpt_path):
           step_loss, step_acc = sess.run([loss, acc])
           accs.append(step_acc)
           losses.append(step_loss)
-          if iters > 40: break
+          # if iters > 40: break
       except tf.errors.OutOfRangeError as e:
         coord.request_stop(e)
       finally:
@@ -105,23 +138,42 @@ def validate(ckpt_path):
   mean_loss, mean_acc = np.mean(losses), np.mean(accs)
   print('Validation. Loss: {:.3f}, Accuracy: {:.4f}'.
         format(mean_loss, mean_acc))
-  config.dropout = True
 
   return mean_loss, mean_acc
 
-
-def main():
-  config = TrainConfig()
-  g = tf.Graph()
+def options(config):
+  """Get user input on training options"""
   ckpt_path = 'checkpoints/' + config.model_name + '/' + config.experiment_name
   tflog_path = ('tf_logs/' + config.model_name + '/' +
                 config.experiment_name + '/' + get_logdir())
+  checkpoint = None
   if not os.path.isdir(ckpt_path):
     os.makedirs(ckpt_path)
+    return False, ckpt_path, tflog_path, checkpoint
+  else:
+    while True:
+      q1 = input('Continue previous training? [Y/n]: ')
+      if len(q1) == 0 or q1 == 'n' or q1 == 'Y': break
+    if q1 == 'n':
+      return False, ckpt_path, tflog_path, checkpoint
+    else:
+      q2 = input('Enter checkpoint name [defaults to most recent]: ')
+      if len(q2) == 0:
+        checkpoint = tf.train.latest_checkpoint(ckpt_path)
+      else:
+        checkpoint = ckpt_path + '/' + q2
+      return True, ckpt_path, tflog_path, checkpoint
+
+
+def train():
+  config = TrainConfig()
+  continue_train, ckpt_path, tflog_path, checkpoint = options(config)
+  g = tf.Graph()
   with g.as_default():
     writer = tf.summary.FileWriter(tflog_path, g)
-    loss, acc = model_wrapper('train', config)
-    train_op, g_step = optimizer(loss, config)
+    loss, acc = model('train', config)
+    train_op, g_step, lr = optimizer(loss, config)
+    controller = TrainControl(lr)
     val_acc = tf.Variable(0.0, trainable=False)
     val_loss = tf.Variable(0.0, trainable=False)
     tf.summary.scalar('val_loss', val_loss)
@@ -134,7 +186,8 @@ def main():
     saver = tf.train.Saver()
     with tf.Session() as sess:
       init.run()
-      # saver.restore(sess, tf.train.latest_checkpoint(ckpt_path))
+      if continue_train:
+        saver.restore(sess, checkpoint)
       coord = tf.train.Coordinator()
       threads = tf.train.start_queue_runners(sess=sess, coord=coord)
       try:
@@ -144,11 +197,14 @@ def main():
                                                    g_step, acc])
           losses.append(step_loss)
           accs.append(step_acc)
-          if step % config.save_every == 0:
-            saver.save(sess, ckpt_path + '/model', step)
-            mean_loss, mean_acc = validate(ckpt_path)
+          if step % config.eval_interval == 0:
+            ckpt = saver.save(sess, ckpt_path + '/model', step)
+            mean_loss, mean_acc = evaluate(ckpt)
             val_acc.load(mean_acc)
             val_loss.load(mean_loss)
+            controller.add_val_loss(mean_acc)
+            controller.update_lr(sess)
+            if controller.done: break
           if step % config.summary_interval == 0:
             writer.add_summary(sess.run(summ), step)
             print('Iteration: {}, Loss: {:.3f}, Accuracy: {:.4f}'.
@@ -162,4 +218,4 @@ def main():
 
 
 if __name__ == "__main__":
-  main()
+  train()

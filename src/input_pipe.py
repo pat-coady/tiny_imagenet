@@ -98,7 +98,9 @@ def read_image(filename_q, mode):
   else:
     img = tf.image.crop_to_bounding_box(img, 4, 4, 56, 56)
 
-  img = tf.image.per_image_standardization(img)
+  img = tf.cast(img, tf.float32)
+  img = (img - 128.0) / 128.0
+
   # TODO: Add noise?
 
   label = tf.string_to_number(label, tf.int32)
@@ -125,6 +127,6 @@ def batch_q(mode, config):
                                        num_epochs=config.num_epochs,
                                        shuffle=True)
 
-  return tf.train.batch(read_image(filename_q, mode),
+  return tf.train.batch_join([read_image(filename_q, mode) for i in range(4)],
                         config.batch_size, shapes=[(56, 56, 3), ()],
-                        capacity=2048, num_threads=2)
+                        capacity=2048)
