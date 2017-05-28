@@ -142,12 +142,12 @@ def evaluate(ckpt):
 
 def options(config):
   """Get user input on training options"""
-  q = input('Enter a short configuration name: ')
+  q = input('Enter a short configuration name [default = "default"]: ')
   if len(q) == 0: q = 'default'
-  config.experiment_name = q
-  ckpt_path = 'checkpoints/' + config.model_name + '/' + config.experiment_name
+  config.config_name = q
+  ckpt_path = 'checkpoints/' + config.model_name + '/' + config.config_name
   tflog_path = ('tf_logs/' + config.model_name + '/' +
-                config.experiment_name + '/' + get_logdir())
+                config.config_name + '/' + get_logdir())
   checkpoint = None
   if not os.path.isdir(ckpt_path):
     os.makedirs(ckpt_path)
