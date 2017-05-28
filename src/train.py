@@ -12,7 +12,7 @@ import os
 class TrainConfig(object):
   """Training configuration"""
   batch_size = 64
-  num_epochs = 15
+  num_epochs = 50
   summary_interval = 100
   eval_interval = 2000  # must be integer multiple of summary_interval
   lr = 0.01
