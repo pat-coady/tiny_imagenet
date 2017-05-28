@@ -31,14 +31,14 @@ class TrainControl(object):
     self.num_lr_updates = 0
     self.lr_factor = 1/5
 
-  def add_val_loss(self, loss):
+  def add_val_acc(self, loss):
     self.val_accs.append(loss)
 
   def update_lr(self, sess):
     if len(self.val_accs) < 3:
       return
     decrease = False
-    if self.val_accs[-2] < self.val_accs[-1]:
+    if self.val_accs[-1] < self.val_accs[-2]:
       decrease = True
     avg_2 = (self.val_accs[-2] + self.val_accs[-3]) / 2
     if abs(self.val_accs[-1] - avg_2) < 0.01:
@@ -204,7 +204,7 @@ def train():
             mean_loss, mean_acc = evaluate(ckpt)
             val_acc.load(mean_acc)
             val_loss.load(mean_loss)
-            controller.add_val_loss(mean_acc)
+            controller.add_val_acc(mean_acc)
             controller.update_lr(sess)
             if controller.done(): break
           if step % config.summary_interval == 0:
