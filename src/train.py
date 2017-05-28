@@ -13,8 +13,8 @@ class TrainConfig(object):
   """Training configuration"""
   batch_size = 64
   num_epochs = 15
-  summary_interval = 200
-  eval_interval = 100
+  summary_interval = 100
+  eval_interval = 2000  # must be integer multiple of summary_interval
   lr = 0.01
   momentum = 0.9
   dropout = True
@@ -26,22 +26,22 @@ class TrainConfig(object):
 
 class TrainControl(object):
   def __init__(self, lr):
-    self.val_losses = []
+    self.vac_accs = []
     self.lr = lr
     self.num_lr_updates = 0
     self.lr_factor = 1/5
 
   def add_val_loss(self, loss):
-    self.val_losses.append(loss)
+    self.vac_accs.append(loss)
 
   def update_lr(self, sess):
-    if len(self.val_losses) < 3:
+    if len(self.vac_accs) < 3:
       return
     decrease = False
-    if self.val_losses[-1] < self.val_losses[-2]:
+    if self.vac_accs[-1] < self.vac_accs[-2]:
       decrease = True
-    prev_2 = (self.val_losses[-2] + self.val_losses[-3]) / 2
-    if abs(self.val_losses[-1] - prev_2) < 0.5:
+    avg_2 = (self.vac_accs[-2] + self.vac_accs[-3]) / 2
+    if abs(self.vac_accs[-1] - avg_2) < 0.5:
       decrease = True
     if decrease:
       old_lr = sess.run(self.lr)
@@ -104,7 +104,7 @@ def model(mode, config):
   return total_loss, acc
 
 
-def evaluate(ckpt_path):
+def evaluate(ckpt):
   """Load most recent checkpoint and run on validation set"""
   config = TrainConfig()
   config.dropout = False  # disable dropout for validation
@@ -119,7 +119,7 @@ def evaluate(ckpt_path):
                       tf.local_variables_initializer())
     with tf.Session() as sess:
       init.run()
-      saver.restore(sess, tf.train.latest_checkpoint(ckpt_path))
+      saver.restore(sess, ckpt)
       coord = tf.train.Coordinator()
       threads = tf.train.start_queue_runners(sess=sess, coord=coord)
       try:
@@ -204,7 +204,7 @@ def train():
             val_loss.load(mean_loss)
             controller.add_val_loss(mean_acc)
             controller.update_lr(sess)
-            if controller.done: break
+            if controller.done(): break
           if step % config.summary_interval == 0:
             writer.add_summary(sess.run(summ), step)
             print('Iteration: {}, Loss: {:.3f}, Accuracy: {:.4f}'.
