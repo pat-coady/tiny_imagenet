@@ -21,27 +21,27 @@ class TrainConfig(object):
   dropout_keep_prob = 0.5
   model_name = 'conv_pool_net'
   model = staticmethod(globals()[model_name])
-  experiment_name = 'initial_tune'
+  config_name = 'blank'
 
 
 class TrainControl(object):
   def __init__(self, lr):
-    self.vac_accs = []
+    self.val_accs = []
     self.lr = lr
     self.num_lr_updates = 0
     self.lr_factor = 1/5
 
   def add_val_loss(self, loss):
-    self.vac_accs.append(loss)
+    self.val_accs.append(loss)
 
   def update_lr(self, sess):
-    if len(self.vac_accs) < 3:
+    if len(self.val_accs) < 3:
       return
     decrease = False
-    if self.vac_accs[-1] < self.vac_accs[-2]:
+    if self.val_accs[-2] < self.val_accs[-1]:
       decrease = True
-    avg_2 = (self.vac_accs[-2] + self.vac_accs[-3]) / 2
-    if abs(self.vac_accs[-1] - avg_2) < 0.5:
+    avg_2 = (self.val_accs[-2] + self.val_accs[-3]) / 2
+    if abs(self.val_accs[-1] - avg_2) < 0.5:
       decrease = True
     if decrease:
       old_lr = sess.run(self.lr)
@@ -142,6 +142,9 @@ def evaluate(ckpt):
 
 def options(config):
   """Get user input on training options"""
+  q = input('Enter a short configuration name: ')
+  if len(q) == 0: q = 'default'
+  config.experiment_name = q
   ckpt_path = 'checkpoints/' + config.model_name + '/' + config.experiment_name
   tflog_path = ('tf_logs/' + config.model_name + '/' +
                 config.experiment_name + '/' + get_logdir())
