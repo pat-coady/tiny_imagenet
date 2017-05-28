@@ -41,7 +41,7 @@ class TrainControl(object):
     if self.val_accs[-2] < self.val_accs[-1]:
       decrease = True
     avg_2 = (self.val_accs[-2] + self.val_accs[-3]) / 2
-    if abs(self.val_accs[-1] - avg_2) < 0.5:
+    if abs(self.val_accs[-1] - avg_2) < 0.01:
       decrease = True
     if decrease:
       old_lr = sess.run(self.lr)
