@@ -127,6 +127,6 @@ def batch_q(mode, config):
                                        num_epochs=config.num_epochs,
                                        shuffle=True)
 
-  return tf.train.batch_join([read_image(filename_q, mode) for i in range(4)],
+  return tf.train.batch_join([read_image(filename_q, mode) for i in range(2)],
                         config.batch_size, shapes=[(56, 56, 3), ()],
                         capacity=2048)

@@ -1,25 +1,27 @@
 ### Tiny ImageNet: Main Training
 
-from conv_pool_net import *
+from conv_pool_net2 import *
 from metrics import *
 from losses import *
 from input_pipe import *
 from datetime import datetime
 import numpy as np
 import os
+import shutil
+import glob
 
 
 class TrainConfig(object):
   """Training configuration"""
   batch_size = 64
   num_epochs = 50
-  summary_interval = 100
+  summary_interval = 250
   eval_interval = 2000  # must be integer multiple of summary_interval
   lr = 0.01
   momentum = 0.9
   dropout = True
   dropout_keep_prob = 0.5
-  model_name = 'conv_pool_net'
+  model_name = 'conv_pool_net2'
   model = staticmethod(globals()[model_name])
   config_name = 'blank'
 
@@ -149,6 +151,9 @@ def options(config):
   tflog_path = ('tf_logs/' + config.model_name + '/' +
                 config.config_name + '/' + get_logdir())
   checkpoint = None
+  filenames = glob.glob('*.py')
+  for filename in filenames:
+    shutil.copy(filename, ckpt_path)
   if not os.path.isdir(ckpt_path):
     os.makedirs(ckpt_path)
     return False, ckpt_path, tflog_path, checkpoint
@@ -172,7 +177,6 @@ def train():
   continue_train, ckpt_path, tflog_path, checkpoint = options(config)
   g = tf.Graph()
   with g.as_default():
-    writer = tf.summary.FileWriter(tflog_path, g)
     loss, acc = model('train', config)
     train_op, g_step, lr = optimizer(loss, config)
     controller = TrainControl(lr)
@@ -186,6 +190,7 @@ def train():
      for v in tf.trainable_variables()]
     summ = tf.summary.merge_all()
     saver = tf.train.Saver()
+    writer = tf.summary.FileWriter(tflog_path, g)
     with tf.Session() as sess:
       init.run()
       if continue_train:
