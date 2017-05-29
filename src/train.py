@@ -151,13 +151,16 @@ def options(config):
   tflog_path = ('tf_logs/' + config.model_name + '/' +
                 config.config_name + '/' + get_logdir())
   checkpoint = None
-  filenames = glob.glob('*.py')
-  for filename in filenames:
-    shutil.copy(filename, ckpt_path)
   if not os.path.isdir(ckpt_path):
     os.makedirs(ckpt_path)
+    filenames = glob.glob('*.py')
+    for filename in filenames:
+      shutil.copy(filename, ckpt_path)
     return False, ckpt_path, tflog_path, checkpoint
   else:
+    filenames = glob.glob('*.py')
+    for filename in filenames:
+      shutil.copy(filename, ckpt_path)
     while True:
       q1 = input('Continue previous training? [Y/n]: ')
       if len(q1) == 0 or q1 == 'n' or q1 == 'Y': break
