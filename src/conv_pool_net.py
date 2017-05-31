@@ -90,7 +90,7 @@ def conv_pool_net(training_batch, config):
   fc2 = tf.nn.relu(tf.matmul(fc1, wfc2) + bfc2)
   tf.summary.histogram('fc2', fc2)
   tf.summary.scalar('dead_fc2', tf.reduce_mean(
-    tf.cast(tf.less(tf.matmul(fc1, wfc1) + bfc1, 0), tf.float32)))
+    tf.cast(tf.less(tf.matmul(fc1, wfc2) + bfc2, 0), tf.float32)))
   if config.dropout:
     fc2 = tf.nn.dropout(fc2, config.dropout_keep_prob)
 
