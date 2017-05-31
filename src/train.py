@@ -40,7 +40,7 @@ class TrainControl(object):
     if len(self.val_accs) < 3:
       return
     decrease = False
-    if self.val_accs[-1] + 0.005 < self.val_accs[-2]:
+    if self.val_accs[-1] + 0.005 < max(self.val_accs):
       decrease = True
     avg_2 = (self.val_accs[-2] + self.val_accs[-3]) / 2
     if abs(self.val_accs[-1] - avg_2) < 0.002:
@@ -130,7 +130,6 @@ def evaluate(ckpt):
           step_loss, step_acc = sess.run([loss, acc])
           accs.append(step_acc)
           losses.append(step_loss)
-          # if iters > 40: break
       except tf.errors.OutOfRangeError as e:
         coord.request_stop(e)
       finally:
