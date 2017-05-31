@@ -23,7 +23,8 @@ def conv_conv_conv_pool(x, chan_in, chan_out, name):
   relu1 = tf.nn.relu(conv1 + b)
   tf.summary.histogram(name+'_conv1', relu1)
   tf.summary.scalar(name+'ssq_kernel1', tf.reduce_sum(tf.square(kernel)))
-  tf.summary.scalar(name + 'dead_kernel1', tf.reduce_mean(tf.less(conv1+b, 0)))
+  tf.summary.scalar(name + 'dead_kernel1', tf.reduce_mean(
+    tf.cast(tf.less(conv1+b, 0), tf.uint8)))
 
 
   with tf.variable_scope(name+'_conv2',
@@ -37,7 +38,8 @@ def conv_conv_conv_pool(x, chan_in, chan_out, name):
   relu2 = tf.nn.relu(conv2 + b)
   tf.summary.histogram(name+'_conv2', relu2)
   tf.summary.scalar(name + 'ssq_kernel2', tf.reduce_sum(tf.square(kernel)))
-  tf.summary.scalar(name + 'dead_kernel2', tf.reduce_mean(tf.less(conv2 + b, 0)))
+  tf.summary.scalar(name + 'dead_kernel2', tf.reduce_mean(
+    tf.cast(tf.less(conv2 + b, 0), tf.uint8)))
 
   with tf.variable_scope(name+'_conv3',
                          initializer=tf.truncated_normal_initializer(stddev=(2.0 /
@@ -50,7 +52,8 @@ def conv_conv_conv_pool(x, chan_in, chan_out, name):
   relu3 = tf.nn.relu(conv3 + b)
   tf.summary.histogram(name+'_conv3', relu3)
   tf.summary.scalar(name + 'ssq_kernel3', tf.reduce_sum(tf.square(kernel)))
-  tf.summary.scalar(name + 'dead_kernel3', tf.reduce_mean(tf.less(conv3 + b, 0)))
+  tf.summary.scalar(name + 'dead_kernel3', tf.reduce_mean(
+    tf.cast(tf.less(conv3 + b, 0), tf.uint8)))
 
   y = tf.nn.max_pool(relu3, [1, 2, 2, 1], [1, 2, 2, 1], padding='SAME')
   tf.summary.histogram(name+'_maxpool', y)
@@ -70,7 +73,8 @@ def conv_conv_pool(x, chan_in, chan_out, name):
   relu1 = tf.nn.relu(conv1 + b)
   tf.summary.histogram(name+'_conv1', relu1)
   tf.summary.scalar(name + 'ssq_kernel1', tf.reduce_sum(tf.square(kernel)))
-  tf.summary.scalar(name + 'dead_kernel1', tf.reduce_mean(tf.less(conv1 + b, 0)))
+  tf.summary.scalar(name + 'dead_kernel1', tf.reduce_mean(
+    tf.cast(tf.less(conv1 + b, 0), tf.uint8)))
 
   with tf.variable_scope(name+'_conv2',
                          initializer=tf.truncated_normal_initializer(stddev=(2.0 /
@@ -83,7 +87,8 @@ def conv_conv_pool(x, chan_in, chan_out, name):
   relu2 = tf.nn.relu(conv2 + b)
   tf.summary.histogram(name+'_conv2', relu2)
   tf.summary.scalar(name + 'ssq_kernel2', tf.reduce_sum(tf.square(kernel)))
-  tf.summary.scalar(name + 'dead_kernel2', tf.reduce_mean(tf.less(conv2 + b, 0)))
+  tf.summary.scalar(name + 'dead_kernel2', tf.reduce_mean(
+    tf.cast(tf.less(conv2 + b, 0), tf.uint8)))
 
   y = tf.nn.max_pool(relu2, [1, 2, 2, 1], [1, 2, 2, 1], padding='SAME')
   tf.summary.histogram(name+'_maxpool', y)
@@ -123,7 +128,8 @@ def conv_pool_net2(training_batch, config):
   fc1 = tf.nn.relu(tf.matmul(flat1, wfc1) + bfc1)
   tf.summary.histogram('fc1', fc1)
   tf.summary.scalar('ssq_fc1', tf.reduce_sum(tf.square(wfc1)))
-  tf.summary.scalar('dead_fc1', tf.reduce_mean(tf.less(tf.matmul(flat1, wfc1) + bfc1, 0)))
+  tf.summary.scalar('dead_fc1', tf.reduce_mean(
+    tf.cast(tf.less(tf.matmul(flat1, wfc1) + bfc1, 0), tf.uint8)))
   if config.dropout:
     fc1 = tf.nn.dropout(fc1, config.dropout_keep_prob)
 
@@ -138,7 +144,8 @@ def conv_pool_net2(training_batch, config):
   fc2 = tf.nn.relu(tf.matmul(fc1, wfc2) + bfc2)
   tf.summary.histogram('fc2', fc2)
   tf.summary.scalar('ssq_fc2', tf.reduce_sum(tf.square(wfc2)))
-  tf.summary.scalar('dead_fc2', tf.reduce_mean(tf.less(tf.matmul(fc1, wfc2) + bfc2, 0)))
+  tf.summary.scalar('dead_fc2', tf.reduce_mean(
+    tf.cast(tf.less(tf.matmul(fc1, wfc2) + bfc2, 0), tf.uint8)))
   if config.dropout:
     fc2 = tf.nn.dropout(fc2, config.dropout_keep_prob)
 
@@ -153,7 +160,8 @@ def conv_pool_net2(training_batch, config):
   fc3 = tf.nn.relu(tf.matmul(fc2, wfc3) + bfc3)
   tf.summary.histogram('fc3', fc3)
   tf.summary.scalar('ssq_fc3', tf.reduce_sum(tf.square(wfc3)))
-  tf.summary.scalar('dead_fc3', tf.reduce_mean(tf.less(tf.matmul(fc2, wfc3) + bfc3, 0)))
+  tf.summary.scalar('dead_fc3', tf.reduce_mean(
+    tf.cast(tf.less(tf.matmul(fc2, wfc3) + bfc3, 0), tf.uint8)))
   if config.dropout:
     fc3 = tf.nn.dropout(fc3, config.dropout_keep_prob)
 

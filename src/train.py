@@ -115,7 +115,7 @@ def evaluate(ckpt):
 
   with tf.Graph().as_default():
     loss, acc = model('val', config)
-    saver = tf.train.Saver()
+    saver = tf.train.Saver(max_to_keep=2)
     init = tf.group(tf.global_variables_initializer(),
                     tf.local_variables_initializer())
     with tf.Session() as sess:
