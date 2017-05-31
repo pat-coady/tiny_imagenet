@@ -1,6 +1,6 @@
 ### Tiny ImageNet: Main Training
 
-from conv_pool_net2 import *
+from conv_pool_net import *
 from metrics import *
 from losses import *
 from input_pipe import *
