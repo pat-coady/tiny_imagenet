@@ -21,6 +21,8 @@ def conv_conv_pool(x, chan_in, chan_out, config, name):
   conv1 = tf.nn.conv2d(x, kernel, [1, 1, 1, 1], 'SAME')
   relu1 = tf.nn.relu(conv1 + b)
   tf.summary.histogram(name+'_conv1', relu1)
+  tf.summary.scalar(name + 'dead_kernel1', tf.reduce_mean(
+    tf.cast(tf.less(conv1+b, 0), tf.float32)))
 
   with tf.variable_scope(name+'_conv2',
                          initializer=tf.truncated_normal_initializer(stddev=(2.0 /
@@ -32,6 +34,8 @@ def conv_conv_pool(x, chan_in, chan_out, config, name):
   conv2 = tf.nn.conv2d(relu1, kernel, [1, 1, 1, 1], 'SAME')
   relu2 = tf.nn.relu(conv2 + b)
   tf.summary.histogram(name+'_conv2', relu2)
+  tf.summary.scalar(name + 'dead_kernel2', tf.reduce_mean(
+    tf.cast(tf.less(conv2+b, 0), tf.float32)))
 
   y = tf.nn.max_pool(relu2, [1, 2, 2, 1], [1, 2, 2, 1], padding='SAME')
   tf.summary.histogram(name+'_maxpool', y)
@@ -70,6 +74,8 @@ def conv_pool_net(training_batch, config):
   flat1 = tf.reshape(ccp3, shape=(-1, 6272))
   fc1 = tf.nn.relu(tf.matmul(flat1, wfc1) + bfc1)
   tf.summary.histogram('fc1', fc1)
+  tf.summary.scalar('dead_fc1', tf.reduce_mean(
+    tf.cast(tf.less(tf.matmul(flat1, wfc1) + bfc1, 0), tf.float32)))
   if config.dropout:
     fc1 = tf.nn.dropout(fc1, config.dropout_keep_prob)
 
@@ -83,6 +89,8 @@ def conv_pool_net(training_batch, config):
     bfc2 = tf.get_variable(shape=(1024,), name='bfc2')
   fc2 = tf.nn.relu(tf.matmul(fc1, wfc2) + bfc2)
   tf.summary.histogram('fc2', fc2)
+  tf.summary.scalar('dead_fc2', tf.reduce_mean(
+    tf.cast(tf.less(tf.matmul(fc1, wfc1) + bfc1, 0), tf.float32)))
   if config.dropout:
     fc2 = tf.nn.dropout(fc2, config.dropout_keep_prob)
 
