@@ -24,6 +24,7 @@ class TrainConfig(object):
   model_name = 'conv_pool_net'
   model = staticmethod(globals()[model_name])
   config_name = 'blank'
+  training = True
 
 
 class TrainControl(object):
@@ -110,6 +111,7 @@ def evaluate(ckpt):
   """Load most recent checkpoint and run on validation set"""
   config = TrainConfig()
   config.dropout = False  # disable dropout for validation
+  config.training = False  # use long-term averages for batchnorm
   config.num_epochs = 1
   accs, losses = [], []
 

@@ -11,7 +11,7 @@
 
 import tensorflow as tf
 
-def conv_conv_conv_pool(x, chan_in, chan_out, name):
+def conv_conv_conv_pool(x, chan_in, chan_out, name, config):
   with tf.variable_scope(name+'_conv1',
                          initializer=tf.truncated_normal_initializer(stddev=(2.0 /
                                  (3 * 3 * chan_in)) ** 0.5),
@@ -20,6 +20,7 @@ def conv_conv_conv_pool(x, chan_in, chan_out, name):
     b = tf.get_variable(shape=(chan_out,), name='b')
 
   conv1 = tf.nn.conv2d(x, kernel, [1, 1, 1, 1], 'SAME')
+  conv1 = tf.layers.batch_normalization(conv1, training=config.training)
   relu1 = tf.nn.relu(conv1 + b)
   tf.summary.histogram(name+'_conv1', relu1)
   tf.summary.scalar(name+'ssq_kernel1', tf.reduce_sum(tf.square(kernel)))
@@ -35,6 +36,7 @@ def conv_conv_conv_pool(x, chan_in, chan_out, name):
     b = tf.get_variable(shape=(chan_out,), name='b')
 
   conv2 = tf.nn.conv2d(relu1, kernel, [1, 1, 1, 1], 'SAME')
+  conv2 = tf.layers.batch_normalization(conv2, training=config.training)
   relu2 = tf.nn.relu(conv2 + b)
   tf.summary.histogram(name+'_conv2', relu2)
   tf.summary.scalar(name + 'ssq_kernel2', tf.reduce_sum(tf.square(kernel)))
@@ -49,6 +51,7 @@ def conv_conv_conv_pool(x, chan_in, chan_out, name):
     b = tf.get_variable(shape=(chan_out,), name='b')
 
   conv3 = tf.nn.conv2d(relu2, kernel, [1, 1, 1, 1], 'SAME')
+  conv3 = tf.layers.batch_normalization(conv3, training=config.training)
   relu3 = tf.nn.relu(conv3 + b)
   tf.summary.histogram(name+'_conv3', relu3)
   tf.summary.scalar(name + 'ssq_kernel3', tf.reduce_sum(tf.square(kernel)))
@@ -61,7 +64,7 @@ def conv_conv_conv_pool(x, chan_in, chan_out, name):
   return y
 
 
-def conv_conv_pool(x, chan_in, chan_out, name):
+def conv_conv_pool(x, chan_in, chan_out, name, config):
   with tf.variable_scope(name+'_conv1',
                          initializer=tf.truncated_normal_initializer(stddev=(2.0 /
                                  (3 * 3 * chan_in)) ** 0.5),
@@ -70,6 +73,7 @@ def conv_conv_pool(x, chan_in, chan_out, name):
     b = tf.get_variable(shape=(chan_out,), name='b')
 
   conv1 = tf.nn.conv2d(x, kernel, [1, 1, 1, 1], 'SAME')
+  conv1 = tf.layers.batch_normalization(conv1, training=config.training)
   relu1 = tf.nn.relu(conv1 + b)
   tf.summary.histogram(name+'_conv1', relu1)
   tf.summary.scalar(name + 'ssq_kernel1', tf.reduce_sum(tf.square(kernel)))
@@ -83,6 +87,7 @@ def conv_conv_pool(x, chan_in, chan_out, name):
     kernel = tf.get_variable(shape=(3, 3, chan_out, chan_out), name='kernel')
     b = tf.get_variable(shape=(chan_out,), name='b')
 
+  conv2 = tf.layers.batch_normalization(conv2, training=config.training)
   conv2 = tf.nn.conv2d(relu1, kernel, [1, 1, 1, 1], 'SAME')
   relu2 = tf.nn.relu(conv2 + b)
   tf.summary.histogram(name+'_conv2', relu2)
@@ -109,11 +114,11 @@ def conv_pool_net2(training_batch, config):
 
   tf.summary.histogram('img', training_batch)
   # in: (N, 56, 56, 3), out: (N, 28, 28, 32)
-  cccp1 = conv_conv_conv_pool(training_batch, 3, 32, 'stack_1')
+  cccp1 = conv_conv_conv_pool(training_batch, 3, 32, 'stack_1', config)
   # in: (N, 28, 28, 32), out: (N, 14, 14, 64)
-  ccp2 = conv_conv_pool(cccp1, 32, 64, 'stack_2')
+  ccp2 = conv_conv_pool(cccp1, 32, 64, 'stack_2', config)
   # in: (N, 14, 14, 64), out: (N, 7, 7, 128)
-  ccp3 = conv_conv_pool(ccp2, 64, 128, 'stack_3')
+  ccp3 = conv_conv_pool(ccp2, 64, 128, 'stack_3', config)
 
   # fc1: flatten -> fully connected layer, width = 1024
   # (N, 7, 7, 128) -> (N, 6272) -> (N, 2048)
