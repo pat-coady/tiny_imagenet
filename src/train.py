@@ -21,7 +21,7 @@ class TrainConfig(object):
   momentum = 0.9
   dropout = True
   dropout_keep_prob = 0.5
-  model_name = 'conv_pool_net2'
+  model_name = 'conv_pool_net'
   model = staticmethod(globals()[model_name])
   config_name = 'blank'
 
