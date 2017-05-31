@@ -1,6 +1,6 @@
 ### Tiny ImageNet: Main Training
 
-from conv_pool_net2 import *
+from conv_pool_net_bn import *
 from metrics import *
 from losses import *
 from input_pipe import *
@@ -21,7 +21,7 @@ class TrainConfig(object):
   momentum = 0.9
   dropout = True
   dropout_keep_prob = 0.5
-  model_name = 'conv_pool_net2'
+  model_name = 'conv_pool_net_bn'
   model = staticmethod(globals()[model_name])
   config_name = 'blank'
   training = True
