@@ -89,7 +89,7 @@ def model(mode, config):
   """Wrap up: input data queue, regression model and loss functions 
 
   Args:
-    mode: 'train' or 'val
+    mode: 'train' or 'val'
     config: model configuration object
 
   Returns:
@@ -192,6 +192,7 @@ def train():
                     tf.local_variables_initializer())
     [tf.summary.histogram(v.name.replace(':', '_'), v)
      for v in tf.trainable_variables()]
+    extra_update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
     summ = tf.summary.merge_all()
     saver = tf.train.Saver(max_to_keep=2)
     writer = tf.summary.FileWriter(tflog_path, g)
@@ -204,8 +205,8 @@ def train():
       try:
         losses, accs = [], []
         while not coord.should_stop():
-          step_loss, _, step, step_acc = sess.run([loss, train_op,
-                                                   g_step, acc])
+          step_loss, _, step, step_acc, __ = sess.run([loss, train_op,
+                                                   g_step, acc, extra_update_ops])
           losses.append(step_loss)
           accs.append(step_acc)
           if step % config.eval_interval == 0:
