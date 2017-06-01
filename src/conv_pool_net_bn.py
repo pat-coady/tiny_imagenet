@@ -87,8 +87,8 @@ def conv_conv_pool(x, chan_in, chan_out, name, config):
     kernel = tf.get_variable(shape=(3, 3, chan_out, chan_out), name='kernel')
     b = tf.get_variable(shape=(chan_out,), name='b')
 
-  conv2 = tf.layers.batch_normalization(conv2, training=config.training)
   conv2 = tf.nn.conv2d(relu1, kernel, [1, 1, 1, 1], 'SAME')
+  conv2 = tf.layers.batch_normalization(conv2, training=config.training)
   relu2 = tf.nn.relu(conv2 + b)
   tf.summary.histogram(name+'_conv2', relu2)
   tf.summary.scalar(name + 'ssq_kernel2', tf.reduce_sum(tf.square(kernel)))
