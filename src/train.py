@@ -19,7 +19,7 @@ class TrainConfig(object):
   eval_interval = 2000  # must be integer multiple of summary_interval
   lr = 0.01
   momentum = 0.9
-  dropout = False
+  dropout = True
   dropout_keep_prob = 0.5
   model_name = 'conv_pool_net_bn'
   model = staticmethod(globals()[model_name])
