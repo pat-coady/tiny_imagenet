@@ -17,7 +17,7 @@ class TrainConfig(object):
   num_epochs = 50
   summary_interval = 250
   eval_interval = 2000  # must be integer multiple of summary_interval
-  lr = 0.01
+  lr = 0.1
   momentum = 0.9
   dropout = False
   dropout_keep_prob = 0.5
