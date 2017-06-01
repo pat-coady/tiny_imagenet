@@ -101,7 +101,7 @@ def conv_conv_pool(x, chan_in, chan_out, name, config):
   return y
 
 
-def conv_pool_net2(training_batch, config):
+def conv_pool_net_bn(training_batch, config):
   """All convolution convnet
 
   Args:
