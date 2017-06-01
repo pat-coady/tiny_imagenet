@@ -19,7 +19,7 @@ class TrainConfig(object):
   eval_interval = 2000  # must be integer multiple of summary_interval
   lr = 0.01
   momentum = 0.9
-  dropout = True
+  dropout = False
   dropout_keep_prob = 0.5
   model_name = 'conv_pool_net_bn'
   model = staticmethod(globals()[model_name])
@@ -117,7 +117,7 @@ def evaluate(ckpt):
 
   with tf.Graph().as_default():
     loss, acc = model('val', config)
-    saver = tf.train.Saver(max_to_keep=2)
+    saver = tf.train.Saver()
     init = tf.group(tf.global_variables_initializer(),
                     tf.local_variables_initializer())
     with tf.Session() as sess:
@@ -193,7 +193,7 @@ def train():
     [tf.summary.histogram(v.name.replace(':', '_'), v)
      for v in tf.trainable_variables()]
     summ = tf.summary.merge_all()
-    saver = tf.train.Saver()
+    saver = tf.train.Saver(max_to_keep=2)
     writer = tf.summary.FileWriter(tflog_path, g)
     with tf.Session() as sess:
       init.run()
