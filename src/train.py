@@ -1,6 +1,6 @@
-### Tiny ImageNet: Main Training
+# Tiny ImageNet: Main Training
 
-from conv_pool_net_bn import *
+from vgg_16 import *
 from metrics import *
 from losses import *
 from input_pipe import *
@@ -19,9 +19,8 @@ class TrainConfig(object):
   eval_interval = 2000  # must be integer multiple of summary_interval
   lr = 0.01
   momentum = 0.9
-  dropout = True
   dropout_keep_prob = 0.5
-  model_name = 'conv_pool_net_bn'
+  model_name = 'vgg_16'
   model = staticmethod(globals()[model_name])
   config_name = 'blank'
   training = True
@@ -57,6 +56,7 @@ class TrainControl(object):
       return True
     else:
       return False
+
 
 def optimizer(loss, config):
   """Add training operation, loss function and global step to Graph.
@@ -143,10 +143,12 @@ def evaluate(ckpt):
 
   return mean_loss, mean_acc
 
+
 def options(config):
   """Get user input on training options"""
   q = input('Enter a short configuration name [default = "default"]: ')
-  if len(q) == 0: q = 'default'
+  if len(q) == 0:
+    q = 'default'
   config.config_name = q
   ckpt_path = 'checkpoints/' + config.model_name + '/' + config.config_name
   tflog_path = ('tf_logs/' + config.model_name + '/' +
@@ -164,7 +166,8 @@ def options(config):
       shutil.copy(filename, ckpt_path)
     while True:
       q1 = input('Continue previous training? [Y/n]: ')
-      if len(q1) == 0 or q1 == 'n' or q1 == 'Y': break
+      if len(q1) == 0 or q1 == 'n' or q1 == 'Y':
+        break
     if q1 == 'n':
       return False, ckpt_path, tflog_path, checkpoint
     else:
@@ -206,7 +209,7 @@ def train():
         losses, accs = [], []
         while not coord.should_stop():
           step_loss, _, step, step_acc, __ = sess.run([loss, train_op,
-                                                   g_step, acc, extra_update_ops])
+                                                       g_step, acc, extra_update_ops])
           losses.append(step_loss)
           accs.append(step_acc)
           if step % config.eval_interval == 0:
@@ -216,7 +219,8 @@ def train():
             val_loss.load(mean_loss)
             controller.add_val_acc(mean_acc)
             controller.update_lr(sess)
-            if controller.done(): break
+            if controller.done():
+              break
           if step % config.summary_interval == 0:
             writer.add_summary(sess.run(summ), step)
             print('Iteration: {}, Loss: {:.3f}, Accuracy: {:.4f}'.
