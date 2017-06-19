@@ -110,7 +110,7 @@ def model(mode, config):
 def evaluate(ckpt):
   """Load most recent checkpoint and run on validation set"""
   config = TrainConfig()
-  config.dropout = False  # disable dropout for validation
+  config.dropout_keep_prob = 1.0  # disable dropout for validation
   config.training = False  # use long-term averages for batchnorm
   config.num_epochs = 1
   accs, losses = [], []
