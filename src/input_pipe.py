@@ -1,4 +1,4 @@
-### Tiny ImageNet: Input Pipeline
+# Tiny ImageNet: Input Pipeline
 
 import glob
 import re
