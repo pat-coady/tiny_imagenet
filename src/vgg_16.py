@@ -65,7 +65,7 @@ def dense(inputs, units, name=None):
   return out
 
 
-def vgg_16_reg(training_batch, config):
+def vgg_16(training_batch, config):
   """VGG-like conv-net
 
   Args:
