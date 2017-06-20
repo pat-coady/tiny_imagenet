@@ -18,7 +18,7 @@ class TrainConfig(object):
   summary_interval = 250
   eval_interval = 2000  # must be integer multiple of summary_interval
   lr = 0.01
-  reg = 1e-3
+  reg = 3e-3
   momentum = 0.9
   dropout_keep_prob = 0.5
   model_name = 'vgg_16_reg'
@@ -41,7 +41,7 @@ class TrainControl(object):
     if len(self.val_accs) < 3:
       return
     decrease = False
-    if self.val_accs[-1] + 0.005 < max(self.val_accs):
+    if self.val_accs[-1] + 0.0 < max(self.val_accs):
       decrease = True
     avg_2 = (self.val_accs[-2] + self.val_accs[-3]) / 2
     if abs(self.val_accs[-1] - avg_2) < 0.002:
