@@ -1,6 +1,8 @@
-## Tiny ImageNet: Losses
-
+"""
+Tiny ImageNet: Loss Functions
+"""
 import tensorflow as tf
+
 
 def softmax_ce_loss(logits, labels):
   """Softmax + cross-entropy loss

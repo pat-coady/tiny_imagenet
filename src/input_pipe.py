@@ -1,5 +1,18 @@
-# Tiny ImageNet: Input Pipeline
+"""
+Tiny ImageNet: Input Pipeline
+Written by Patrick Coady (pcoady@alum.mit.edu)
 
+Reads in jpegs, distorts images (flips, translations, hue and
+saturation) and builds QueueRunners to keep the GPU well-fed. Uses
+specific directory and file naming structure from data download
+link below.
+
+Also builds dictionary between label integer and human-readable
+class names.
+
+Get data here:
+https://tiny-imagenet.herokuapp.com/
+"""
 import glob
 import re
 import tensorflow as tf
@@ -123,5 +136,5 @@ def batch_q(mode, config):
                                        shuffle=True)
 
   return tf.train.batch_join([read_image(filename_q, mode) for i in range(2)],
-                        config.batch_size, shapes=[(56, 56, 3), ()],
-                        capacity=2048)
+                             config.batch_size, shapes=[(56, 56, 3), ()],
+                             capacity=2048)

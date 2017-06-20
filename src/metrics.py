@@ -1,6 +1,8 @@
-## Tiny ImageNet: Metrics
-
+"""
+Tiny ImageNet: Performance Metrics
+"""
 import tensorflow as tf
+
 
 def accuracy(logits, labels):
   """Return batch accuracy
@@ -10,7 +12,7 @@ def accuracy(logits, labels):
     labels: tf.uint8 labels {0 .. 199}
 
   Returns:
-    losses: mean cross entropy loss
+    classification accuracy
 
   """
   labels = tf.cast(labels, tf.int64)

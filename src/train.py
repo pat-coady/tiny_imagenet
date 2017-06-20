@@ -1,6 +1,20 @@
-# Tiny ImageNet: Main Training
+"""
+Tiny ImageNet: Training
+Written by Patrick Coady (pcoady@alum.mit.edu)
 
-from vgg_16_reg import *
+Train model specified in TrainConfig.model_name.
+
+Key Features:
+  1. Saves key operations and variables viewing in TensorBoard
+  2. Training control:
+    a) Learning rate decreases based on validation accuracy trend
+    b) Training terminates based on validation accuracy trend
+  4. Basic user interface to:
+    a) Name training runs / directories
+    b) Saves model configuration in training result directory
+    c) Continue training from checkpoint
+"""
+from vgg_16 import *  # import model
 from metrics import *
 from losses import *
 from input_pipe import *
@@ -17,17 +31,23 @@ class TrainConfig(object):
   num_epochs = 50
   summary_interval = 250
   eval_interval = 2000  # must be integer multiple of summary_interval
-  lr = 0.01
-  reg = 5e-4
+  lr = 0.01  # learning rate
+  reg = 5e-4  # regularization
   momentum = 0.9
   dropout_keep_prob = 0.5
-  model_name = 'vgg_16_reg'
-  model = staticmethod(globals()[model_name])
-  config_name = 'blank'
-  training = True
+  model_name = 'vgg_16'  # choose model
+  model = staticmethod(globals()[model_name])  # gets model by name
 
 
 class TrainControl(object):
+  """Basic training control
+
+  Decreases learning rate (lr), terminates training after 3 lr decreases
+
+  Track validation accuracy, decrease lr by 1/5th when:
+    1. validation accuracy worsens
+    2. less than 0.2% absolute improvement last 3 iterations
+  """
   def __init__(self, lr):
     self.val_accs = []
     self.lr = lr
@@ -41,9 +61,11 @@ class TrainControl(object):
     if len(self.val_accs) < 3:
       return
     decrease = False
-    if self.val_accs[-1] + 0.0 < max(self.val_accs):
+    # decrease LR if validation acc worsens
+    if self.val_accs[-1] < max(self.val_accs):
       decrease = True
     avg_2 = (self.val_accs[-2] + self.val_accs[-3]) / 2
+    # decrease LR if validation accuracy doesn't improve by 0.2% (absolute)
     if abs(self.val_accs[-1] - avg_2) < 0.002:
       decrease = True
     if decrease:
@@ -53,7 +75,7 @@ class TrainControl(object):
       print('*** New learning rate: {}'.format(old_lr * self.lr_factor))
 
   def done(self):
-    if self.num_lr_updates > 4:
+    if self.num_lr_updates > 3:  # terminate training after 3 lr decreases
       return True
     else:
       return False
@@ -67,7 +89,7 @@ def optimizer(loss, config):
     loss: model loss tensor
 
   Returns:
-    tuple: (training operation, step loss, global step num) 
+    (training operation, global step num, lr)
   """
   lr = tf.Variable(config.lr, trainable=False, dtype=tf.float32)
   global_step = tf.Variable(0, trainable=False, name='global_step')
@@ -107,7 +129,9 @@ def model(mode, config):
   total_loss += tf.add_n(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES),
                          name='total_loss') * config.reg
   for l2 in tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES):
-    tf.summary.histogram('l2', l2)
+    name = 'l2_loss_' + l2.name.split('/')[0]
+    print(name)
+    tf.summary.histogram(name, l2)
 
   return total_loss, acc
 
@@ -116,7 +140,6 @@ def evaluate(ckpt):
   """Load most recent checkpoint and run on validation set"""
   config = TrainConfig()
   config.dropout_keep_prob = 1.0  # disable dropout for validation
-  config.training = False  # use long-term averages for batchnorm
   config.num_epochs = 1
   accs, losses = [], []
 
