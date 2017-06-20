@@ -20,6 +20,7 @@ def conv_2d(inputs, filters, kernel_size, name=None):
   out = tf.layers.conv2d(inputs, filters=filters, kernel_size=kernel_size,
                          padding='same', activation=tf.nn.relu,
                          kernel_initializer=tf.random_normal_initializer(stddev=stddev),
+                         kernel_regularizer=tf.contrib.layers.l2_regularizer(1.0),
                          name=name)
   tf.summary.histogram(name, out)
 
