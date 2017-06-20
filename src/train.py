@@ -1,6 +1,6 @@
 # Tiny ImageNet: Main Training
 
-from vgg_16 import *
+from vgg_16_reg import *
 from metrics import *
 from losses import *
 from input_pipe import *
@@ -18,9 +18,10 @@ class TrainConfig(object):
   summary_interval = 250
   eval_interval = 2000  # must be integer multiple of summary_interval
   lr = 0.01
+  reg = 5e-4
   momentum = 0.9
   dropout_keep_prob = 0.5
-  model_name = 'vgg_16'
+  model_name = 'vgg_16_reg'
   model = staticmethod(globals()[model_name])
   config_name = 'blank'
   training = True
@@ -103,6 +104,10 @@ def model(mode, config):
   softmax_ce_loss(logits, labels)
   acc = accuracy(logits, labels)
   total_loss = tf.add_n(tf.get_collection(tf.GraphKeys.LOSSES), name='total_loss')
+  total_loss += tf.add_n(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES),
+                         name='total_loss') * config.reg
+  for l2 in tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES):
+    tf.summary.histogram('l2', l2)
 
   return total_loss, acc
 
@@ -126,9 +131,7 @@ def evaluate(ckpt):
       coord = tf.train.Coordinator()
       threads = tf.train.start_queue_runners(sess=sess, coord=coord)
       try:
-        iters = 0
         while not coord.should_stop():
-          iters += 1
           step_loss, step_acc = sess.run([loss, acc])
           accs.append(step_acc)
           losses.append(step_loss)
