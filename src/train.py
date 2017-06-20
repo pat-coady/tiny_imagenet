@@ -18,7 +18,7 @@ class TrainConfig(object):
   summary_interval = 250
   eval_interval = 2000  # must be integer multiple of summary_interval
   lr = 0.01
-  reg = 5e-4
+  reg = 5e-3
   momentum = 0.9
   dropout_keep_prob = 0.5
   model_name = 'vgg_16_reg'
