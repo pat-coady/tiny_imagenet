@@ -2,17 +2,17 @@
 Tiny ImageNet: Training
 Written by Patrick Coady (pcoady@alum.mit.edu)
 
-Train model specified in TrainConfig.model_name.
+Train model specified in class static var: TrainConfig.model_name.
 
 Key Features:
-  1. Saves key operations and variables viewing in TensorBoard
+  1. Saves key operations and variables for viewing in TensorBoard
   2. Training control:
     a) Learning rate decreases based on validation accuracy trend
     b) Training terminates based on validation accuracy trend
   4. Basic user interface to:
     a) Name training runs / directories
-    b) Saves model configuration in training result directory
-    c) Continue training from checkpoint
+    b) Saves copy of .py files in training result directory
+    c) Resume training from checkpoint
 """
 from vgg_16 import *  # import model
 from metrics import *
@@ -32,7 +32,7 @@ class TrainConfig(object):
   summary_interval = 250
   eval_interval = 2000  # must be integer multiple of summary_interval
   lr = 0.01  # learning rate
-  reg = 5e-4 * 3 # regularization
+  reg = 5e-4 * 3  # regularization
   momentum = 0.9
   dropout_keep_prob = 0.5
   model_name = 'vgg_16'  # choose model
@@ -82,11 +82,11 @@ class TrainControl(object):
 
 
 def optimizer(loss, config):
-  """Add training operation, loss function and global step to Graph.
+  """Add training operation, global_step and lr to Graph
 
   Args:
-    config: training configuration object
     loss: model loss tensor
+    config: training configuration object
 
   Returns:
     (training operation, global step num, lr)
@@ -126,11 +126,10 @@ def model(mode, config):
   softmax_ce_loss(logits, labels)
   acc = accuracy(logits, labels)
   total_loss = tf.add_n(tf.get_collection(tf.GraphKeys.LOSSES), name='total_loss')
-  total_loss += tf.add_n(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES),
-                         name='total_loss') * config.reg
+  # total_loss += tf.add_n(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES),
+  #                        name='total_loss') * config.reg
   for l2 in tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES):
     name = 'l2_loss_' + l2.name.split('/')[0]
-    print(name)
     tf.summary.histogram(name, l2)
 
   return total_loss, acc
