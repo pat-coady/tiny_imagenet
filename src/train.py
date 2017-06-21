@@ -89,7 +89,7 @@ def optimizer(loss, config):
     config: training configuration object
 
   Returns:
-    (training operation, global step num, lr)
+    (train_op, global_step, lr)
   """
   lr = tf.Variable(config.lr, trainable=False, dtype=tf.float32)
   global_step = tf.Variable(0, trainable=False, name='global_step')
@@ -109,7 +109,7 @@ def get_logdir():
 
 
 def model(mode, config):
-  """Wrap up: input data queue, regression model and loss functions 
+  """Pull it all together: input queue, inference model and loss functions
 
   Args:
     mode: 'train' or 'val'
@@ -137,7 +137,7 @@ def model(mode, config):
 
 
 def evaluate(ckpt):
-  """Load most recent checkpoint and run on validation set"""
+  """Load checkpoint and run on validation set"""
   config = TrainConfig()
   config.dropout_keep_prob = 1.0  # disable dropout for validation
   config.num_epochs = 1
@@ -176,10 +176,12 @@ def options(config):
   if len(q) == 0:
     q = 'default'
   config.config_name = q
+  # tensorboard and checkpoint log directory names
   ckpt_path = 'checkpoints/' + config.model_name + '/' + config.config_name
   tflog_path = ('tf_logs/' + config.model_name + '/' +
                 config.config_name + '/' + get_logdir())
   checkpoint = None
+  # TODO: spaghetti mess, clean up:
   if not os.path.isdir(ckpt_path):
     os.makedirs(ckpt_path)
     filenames = glob.glob('*.py')
@@ -206,6 +208,8 @@ def options(config):
 
 
 def train():
+  """Build Graph, launch session and train."""
+
   config = TrainConfig()
   continue_train, ckpt_path, tflog_path, checkpoint = options(config)
   g = tf.Graph()
@@ -213,14 +217,17 @@ def train():
     loss, acc = model('train', config)
     train_op, g_step, lr = optimizer(loss, config)
     controller = TrainControl(lr)
+    # put variables in graph to hold validation acc and loss for TensorBoard viewing
     val_acc = tf.Variable(0.0, trainable=False)
     val_loss = tf.Variable(0.0, trainable=False)
     tf.summary.scalar('val_loss', val_loss)
     tf.summary.scalar('val_accuracy', val_acc)
     init = tf.group(tf.global_variables_initializer(),
                     tf.local_variables_initializer())
+    # histograms of all variables to TensorBoard
     [tf.summary.histogram(v.name.replace(':', '_'), v)
      for v in tf.trainable_variables()]
+    # next line only needed for batch normalization (updates beta and gamma)
     extra_update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
     summ = tf.summary.merge_all()
     saver = tf.train.Saver(max_to_keep=2)
@@ -232,7 +239,7 @@ def train():
       coord = tf.train.Coordinator()
       threads = tf.train.start_queue_runners(sess=sess, coord=coord)
       try:
-        losses, accs = [], []
+        losses, accs = [], []  # hold running averages for test loss/acc
         while not coord.should_stop():
           step_loss, _, step, step_acc, __ = sess.run([loss, train_op,
                                                        g_step, acc, extra_update_ops])
