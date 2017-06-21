@@ -82,7 +82,7 @@ class TrainControl(object):
 
 
 def optimizer(loss, config):
-  """Add training operation, global_step and lr to Graph
+  """Add training operation, global_step and learning rate variable to Graph
 
   Args:
     loss: model loss tensor
@@ -118,7 +118,7 @@ def model(mode, config):
   Returns:
     loss and accuracy tensors
   """
-  # preprocess images on cpu
+  # preprocess images on cpu - send to gpu as uint8 for speed
   with tf.device('/cpu:0'):
     imgs, labels = batch_q(mode, config)
 
@@ -126,9 +126,10 @@ def model(mode, config):
   softmax_ce_loss(logits, labels)
   acc = accuracy(logits, labels)
   total_loss = tf.add_n(tf.get_collection(tf.GraphKeys.LOSSES), name='total_loss')
-  # total_loss += tf.add_n(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES),
-  #                        name='total_loss') * config.reg
+  total_loss += tf.add_n(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES),
+                         name='total_loss') * config.reg
   for l2 in tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES):
+    # add l2 loss histograms to TensorBoard and cleanup var names
     name = 'l2_loss_' + l2.name.split('/')[0]
     tf.summary.histogram(name, l2)
 
