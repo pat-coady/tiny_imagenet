@@ -123,7 +123,8 @@ def model(mode, config):
     imgs, labels = batch_q(mode, config)
 
   logits = config.model(imgs, config)
-  softmax_ce_loss(logits, labels)
+  # TODO - revert to regular ce_loss after smoothing experiment
+  softmax_smooth_ce_loss(logits, labels)
   acc = accuracy(logits, labels)
   total_loss = tf.add_n(tf.get_collection(tf.GraphKeys.LOSSES), name='total_loss')
   total_loss += tf.add_n(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES),
@@ -230,7 +231,7 @@ def train():
     # next line only needed for batch normalization (updates beta and gamma)
     extra_update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
     summ = tf.summary.merge_all()
-    saver = tf.train.Saver(max_to_keep=2)
+    saver = tf.train.Saver(max_to_keep=1)
     writer = tf.summary.FileWriter(tflog_path, g)
     with tf.Session() as sess:
       init.run()
