@@ -52,10 +52,12 @@ def svm_loss(logits, labels):
     losses: mean cross entropy loss
 
   """
-  c = 1.0
+  c = 10.0
   labels = tf.cast(labels, tf.int32)
   ohe = tf.one_hot(labels, 200, dtype=tf.float32, on_value=-1.0, off_value=1.0)
-  svm_l = c * tf.reduce_mean(tf.maximum(1.0 + ohe * logits, 0.0))
+  svm_mat = tf.maximum(1.0 + ohe * logits, 0.0)
+  tf.summary.histogram('svm_mat', svm_mat)
+  svm_l = c * tf.reduce_mean(svm_mat)
   tf.add_to_collection(tf.GraphKeys.LOSSES, svm_l)
 
   tf.summary.scalar('loss', svm_l)
