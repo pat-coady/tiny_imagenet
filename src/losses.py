@@ -54,7 +54,7 @@ def svm_loss(logits, labels):
   """
   c = 10.0
   labels = tf.cast(labels, tf.int32)
-  ohe = tf.one_hot(labels, 200, dtype=tf.float32, on_value=-1.0, off_value=1.0)
+  ohe = tf.one_hot(labels, 200, dtype=tf.float32, on_value=-200.0, off_value=1.0)
   tf.summary.histogram('svm_mat_b4_shift', ohe)
   svm_mat = 1.0 + ohe * logits
   tf.summary.histogram('logits', logits)
