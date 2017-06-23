@@ -42,7 +42,7 @@ def softmax_smooth_ce_loss(logits, labels):
 
 
 def svm_loss(logits, labels):
-  """SVM loss
+  """SVM loss: one-vs-all
 
   Args:
     logits: logits (N, C) C = number of classes
