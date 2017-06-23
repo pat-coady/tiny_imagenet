@@ -256,7 +256,7 @@ def train():
             if controller.done():
               break
           if step % config.summary_interval == 0:
-            if step < 751:
+            if step < 251:
               old_lr = sess.run(lr)
               lr.load(old_lr * 10)
             writer.add_summary(sess.run(summ), step)
