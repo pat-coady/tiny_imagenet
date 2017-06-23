@@ -256,6 +256,9 @@ def train():
             if controller.done():
               break
           if step % config.summary_interval == 0:
+            if step == 250:
+              old_lr = sess.run(lr)
+              lr.load(old_lr * 10)
             writer.add_summary(sess.run(summ), step)
             print('Iteration: {}, Loss: {:.3f}, Accuracy: {:.4f}'.
                   format(step, np.mean(losses), np.mean(accs)))
