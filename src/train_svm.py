@@ -31,7 +31,7 @@ class TrainConfig(object):
   num_epochs = 50
   summary_interval = 250
   eval_interval = 2000  # must be integer multiple of summary_interval
-  lr = 0.01  # learning rate
+  lr = 0.001  # learning rate
   reg = 5e-4  # regularization
   momentum = 0.9
   dropout_keep_prob = 0.5
@@ -256,9 +256,9 @@ def train():
             if controller.done():
               break
           if step % config.summary_interval == 0:
-            if step < 251:
-              old_lr = sess.run(lr)
-              lr.load(old_lr * 10)
+            # if step < 251:
+            #   old_lr = sess.run(lr)
+            #   lr.load(old_lr * 10)
             writer.add_summary(sess.run(summ), step)
             print('Iteration: {}, Loss: {:.3f}, Accuracy: {:.4f}'.
                   format(step, np.mean(losses), np.mean(accs)))
