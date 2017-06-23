@@ -31,7 +31,7 @@ class TrainConfig(object):
   num_epochs = 50
   summary_interval = 250
   eval_interval = 2000  # must be integer multiple of summary_interval
-  lr = 0.1  # learning rate
+  lr = 0.01  # learning rate
   reg = 5e-4  # regularization
   momentum = 0.9
   dropout_keep_prob = 0.5
