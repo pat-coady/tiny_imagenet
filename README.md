@@ -2,28 +2,28 @@
 
 ## Introduction
 
-I doubt that is controversial to say that [ImageNet](http://www.image-net.org/) and Alex Krizhevsky's ["AlexNet"](https://papers.nips.cc/paper/4824-imagenet-classification-with-deep-convolutional-neural-networks) sparked a revolution in machine learning. By and large, AlexNet marked the end of the era of hand-crafting features for visual recognition problems. And in just the few years that followed, "deep learning" found great success in natural language processing, speech recognition, and reinforcement learning.
+[ImageNet](http://www.image-net.org/) and Alex Krizhevsky's ["AlexNet"](https://papers.nips.cc/paper/4824-imagenet-classification-with-deep-convolutional-neural-networks) sparked a revolution in machine learning. AlexNet marked the end of the era of mostly hand-crafted features for visual recognition problems. In just the few years that followed AlexNet, "deep learning" found great success in natural language processing, speech recognition, and reinforcement learning.
 
-Any aspiring machine learning engineer should construct and train a deep convnet "from scratch."  Of course, there are varying degrees of "from scratch" - hence the quotes. I had already completed the exercise of implementing many of the neural network primitives using NumPy (e.g. fully connected layers, cross-entropy loss, batch normalization, LSTM / GRU cells, and convolution layers). So, here I use TensorFlow so I could focus on the challenges of training a large network on a large dataset with the benefit of efficiently coded GPU routines.
+Any aspiring machine learning engineer should construct and train a deep convnet "from scratch."  Of course, there are varying degrees of "from scratch." I had already implemented many of the neural network primitives using NumPy (e.g. fully connected layers, cross-entropy loss, batch normalization, LSTM / GRU cells, and convolutional layers). So, here I use TensorFlow so the focus is on the challenge of training a deep network on a large dataset.
 
-Amazingly, with 2 hours of GPU time (about $0.50 using an Amazon EC2 spot instance), it was not difficult to reach 50% top-1 accuracy and almost 80% top-5 accuracy. And, honestly, I was not able to identify many of the images that convnet got wrong (and even some of those it got correct).
+Amazingly, with only 2 hours of GPU time (about $0.50 using an Amazon EC2 spot instance), it was not difficult to reach 50% top-1 accuracy and almost 80% top-5 accuracy. At this accuracy, I was also making mistakes on the images that the model got wrong (and I even mistakes on some that it got correct).
 
 ## Dataset
 
-Stanford prepared a [Tiny ImageNet](https://tiny-imagenet.herokuapp.com/) dataset for their [CS231n](http://cs231n.stanford.edu/) course. The dataset spans 200 image classes with 500 training examples per class. The dataset also has 50 validation and 50 test examples per class.
+Stanford prepared the [Tiny ImageNet](https://tiny-imagenet.herokuapp.com/) dataset for their [CS231n](http://cs231n.stanford.edu/) course. The dataset spans 200 image classes with 500 training examples per class. The dataset also has 50 validation and 50 test examples per class.
 
-The images are down-sampled to 64x64 pixels vs. 256x256 for the full ImageNet dataset. The full ImageNet dataset also has 1000 classes. 
+The images are down-sampled to 64x64 pixels vs. 256x256 for the original ImageNet. The full ImageNet dataset also has 1000 classes. 
 
-So, in short, I think Tiny ImageNet is large enough to be a challenging and realistic problem. Whereas a challenge like MNIST, CIFAR-10, or even CIFAR-100 are a bit too small (but obviously they are still very valuable datasets).
+Tiny ImageNet is large enough to be a challenging and realistic problem. But not so big as to require days of training before you see results.
 
 ## Objectives
 
-1. Successfully train a deep convnet
+1. Train a high-performance deep CNN
 2. Implement saliency (i.e. where in the image is the model focused)
-3. Perform kernel visualization
+3. Visualize convolution filters
 4. Experiment with alternative loss functions
     a. Smoothed cross-entropy loss
-    b. SVM backend
+    b. SVM
 
 For more details, see my blog: [Learning Artificial Intelligence](https://pat-coady.github.io).
 
@@ -33,15 +33,15 @@ For more details, see my blog: [Learning Artificial Intelligence](https://pat-co
 
 **logistic_regression.py**
 
-Always good practice to build a simple baseline to start. Gets about 3% top-1 classification accuracy (random guessing = 0.5%).
+It is good practice to build a simple baseline to start. This baseline gets reaches around 3% top-1 classification accuracy (random guessing = 0.5%).
 
 **single_layer_nn.py**
 
-Another simple baseline. A neural net with a single hidden layer: 1024 hidden units with ReLU activations. Reaches about 8% accuracy without any attempt to tune it.
+Another simple baseline. A neural net with a single hidden layer: 1024 hidden units with ReLU activations. Reaches about 8% accuracy with minimal tuning effort.
 
 **vgg_16.py**
 
-[This paper](https://arxiv.org/pdf/1409.1556.pdf) introduced the VGG-16 architecture. Karen Simonyan and Andrew Zisserman reached state-of-the-art performance using only a deep stack of 3x3xC filters and max-pooling layers. Because Tiny ImageNet has much lower resolution than the original ImageNet data, I removed the last max-pool layer and the last three convolution layers. With a little tuning, this model reaches 52% top-1 accuracy and 77% top-5 accuracy.
+[This paper](https://arxiv.org/pdf/1409.1556.pdf) by Karen Simonyan and Andrew Zisserman introduced the VGG-16 architecture. The authors reached state-of-the-art performance using only a deep stack of 3x3xC filters and max-pooling layers. Because Tiny ImageNet has much lower resolution than the original ImageNet data, I removed the last max-pool layer and the last three convolution layers. With a little tuning, this model reaches 52% top-1 accuracy and 77% top-5 accuracy.
 
 **input_pipe.py**
 
@@ -89,4 +89,3 @@ This notebook loads a model and calculates the validation set accuracy. It also 
 **image_distort.ipynb**
 
 This short notebook displays images after TensorFlow applies image distortions. It is useful to see the distortions to bound how much hue and saturation to apply during training.
-
