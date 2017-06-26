@@ -4,9 +4,9 @@
 
 [ImageNet](http://www.image-net.org/) and Alex Krizhevsky's ["AlexNet"](https://papers.nips.cc/paper/4824-imagenet-classification-with-deep-convolutional-neural-networks) sparked a revolution in machine learning. AlexNet marked the end of the era of mostly hand-crafted features for visual recognition problems. In just the few years that followed AlexNet, "deep learning" found great success in natural language processing, speech recognition, and reinforcement learning.
 
-Any aspiring machine learning engineer should construct and train a deep convnet "from scratch."  Of course, there are varying degrees of "from scratch." I had already implemented many of the neural network primitives using NumPy (e.g. fully connected layers, cross-entropy loss, batch normalization, LSTM / GRU cells, and convolutional layers). So, here I use TensorFlow so the focus is on the challenge of training a deep network on a large dataset.
+Any aspiring machine learning engineer should construct and train a deep convnet "from scratch."  Of course, there are varying degrees of "from scratch." I had already implemented many of the neural network primitives using NumPy (e.g. fully connected layers, cross-entropy loss, batch normalization, LSTM / GRU cells, and convolutional layers). So, here I use TensorFlow so the focus is on training a deep network on a large dataset.
 
-Amazingly, with only 2 hours of GPU time (about $0.50 using an Amazon EC2 spot instance), it was not difficult to reach 50% top-1 accuracy and almost 80% top-5 accuracy. At this accuracy, I was also making mistakes on the images that the model got wrong (and I even mistakes on some that it got correct).
+Amazingly, with only 2 hours of GPU time (about $0.50 using an Amazon EC2 spot instance), it was not difficult to reach 50% top-1 accuracy and almost 80% top-5 accuracy. At this accuracy, I was also making mistakes on the images that the model got wrong (and I even made mistakes on some that it got correct).
 
 ## Dataset
 
@@ -19,7 +19,7 @@ Tiny ImageNet is large enough to be a challenging and realistic problem. But not
 ## Objectives
 
 1. Train a high-performance deep CNN
-2. Implement saliency (i.e. where in the image is the model focused)
+2. Implement saliency (i.e. Where in the image is the model focused?)
 3. Visualize convolution filters
 4. Experiment with alternative loss functions
     a. Smoothed cross-entropy loss
@@ -43,11 +43,13 @@ Another simple baseline. A neural net with a single hidden layer: 1024 hidden un
 
 [This paper](https://arxiv.org/pdf/1409.1556.pdf) by Karen Simonyan and Andrew Zisserman introduced the VGG-16 architecture. The authors reached state-of-the-art performance using only a deep stack of 3x3xC filters and max-pooling layers. Because Tiny ImageNet has much lower resolution than the original ImageNet data, I removed the last max-pool layer and the last three convolution layers. With a little tuning, this model reaches 52% top-1 accuracy and 77% top-5 accuracy.
 
+To keep it fair, I didn't use any pre-trained VGG-16 layers and only trained using the Tiny ImageNet examples.
+
 **input_pipe.py**
 
 * Load JPEGs (using Tiny ImageNet directory structure)
-* Load labels and build integer -> text dictionary
-* QueueRunner to feed training
+* Load labels and build label integer-to-text dictionary
+* QueueRunner to feed GPU
     * including data augmentation (i.e. various image distortions)
 
 **train.py**
@@ -60,19 +62,19 @@ Training is built to run fast on GPU by running the data pipeline on the CPU and
 
 Contains three loss functions: 
 
-1. Stanard cross-entropy loss
-2. Smoothed cross-entropy loss (assign small, non-zero, probability to all classes)
+1. Cross-entropy loss
+2. Smoothed cross-entropy loss (add small, non-zero, probability to all classes)
 3. SVM (works, but never got great performance)
 
 **metrics.py**
 
-Only one training metric right now: % accuracy.
+Measures % accuracy.
 
 ### Notebooks
 
 **predict_and_saliency.ipynb**
 
-This is short notebook randomly selects ten images from the validation set and displays the top-5 predictions vs. the "gold" label. The notebook also displays saliency maps next to each image so you can see where the model is "looking" as it makes decisions.
+This short notebook randomly selects ten images from the validation set and displays the top-5 predictions vs. the "gold" label. The notebook also displays saliency maps next to each image so you can see where the model is "looking" as it makes decisions.
 
 **kernel_viz.ipynb**
 
@@ -84,8 +86,8 @@ Same as *kernel_viz.ipynb* except visualizes after 4th conv layer.
 
 **val_accuracy.ipynb**
 
-This notebook loads a model and calculates the validation set accuracy. It also computes the accuracy when predictions from 5 different crops x 2 flips are averaged: about a 3% accuracy improvement. This notebook runs very slow because it loops through the validation images one-by-one: It was not worth the extra effort to write efficiently. *Premature optimization is the root of all evil* --Donald Knuth
+This notebook loads a model and calculates the validation set accuracy. It also computes the accuracy when predictions from 5 different crops x 2 flips are averaged: about a 3% accuracy improvement. This notebook runs slowly because it loops through the validation images one-by-one: It was not worth the extra effort to write efficiently. *Premature optimization is the root of all evil.* -Donald Knuth
 
 **image_distort.ipynb**
 
-This short notebook displays images after TensorFlow applies image distortions. It is useful to see the distortions to bound how much hue and saturation to apply during training.
+This short notebook displays images after TensorFlow applies image distortions. It is useful to see the distortions to bound the random hue and saturation distortions applied during training.
