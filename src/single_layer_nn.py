@@ -8,7 +8,7 @@ Single-layer NN baseline.
 import tensorflow as tf
 
 
-def one_layer(training_batch, config):
+def single_layer_nn(training_batch, config):
   """Baseline single layer NN 
 
   Args:
@@ -18,7 +18,9 @@ def one_layer(training_batch, config):
   Returns:
     logits: class prediction scores
   """
-  x = tf.reshape(training_batch, (config.batch_size, -1))
+  img = tf.cast(training_batch, tf.float32)
+  out = (img - 128.0) / 128.0
+  x = tf.reshape(out, (config.batch_size, -1))
 
   with tf.variable_scope('hid1',
                          initializer=tf.random_normal_initializer(stddev=0.1 /
@@ -38,9 +40,7 @@ def one_layer(training_batch, config):
   logits = tf.matmul(h1, w2) + b2
   tf.summary.histogram('logits', logits)
 
-  weight_loss = ((tf.nn.l2_loss(w1) +
-                  tf.nn.l2_loss(w2)) * config.reg)
-
-  tf.add_to_collection('losses', weight_loss)
+  l2_loss = (tf.nn.l2_loss(w1) + tf.nn.l2_loss(w2))
+  tf.add_to_collection(tf.GraphKeys.REGULARIZATION_LOSSES, l2_loss)
 
   return logits

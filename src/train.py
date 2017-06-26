@@ -14,7 +14,9 @@ Key Features:
     b) Saves copy of .py files in training result directory
     c) Resume training from checkpoint
 """
-from vgg_16 import *  # import model
+from vgg_16 import *
+# from logistic_regression import *
+# from single_layer_nn import *
 from metrics import *
 from losses import *
 from input_pipe import *
@@ -123,8 +125,7 @@ def model(mode, config):
     imgs, labels = batch_q(mode, config)
 
   logits = config.model(imgs, config)
-  # TODO - revert to regular ce_loss after smoothing experiment
-  softmax_smooth_ce_loss(logits, labels)
+  softmax_ce_loss(logits, labels)
   acc = accuracy(logits, labels)
   total_loss = tf.add_n(tf.get_collection(tf.GraphKeys.LOSSES), name='total_loss')
   total_loss += tf.add_n(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES),
