@@ -14,7 +14,7 @@ Key Features:
     b) Saves copy of .py files in training result directory
     c) Resume training from checkpoint
 """
-from vgg_16 import *  # import model
+from vgg_16_svm import *  # import model
 from metrics import *
 from losses import *
 from input_pipe import *
@@ -32,10 +32,10 @@ class TrainConfig(object):
   summary_interval = 250
   eval_interval = 2000  # must be integer multiple of summary_interval
   lr = 0.001  # learning rate
-  reg = 5e-4  # regularization
+  reg = 1.0  # regularization
   momentum = 0.9
   dropout_keep_prob = 0.5
-  model_name = 'vgg_16'  # choose model
+  model_name = 'vgg_16_svm'  # choose model
   model = staticmethod(globals()[model_name])  # gets model by name
 
 
