@@ -30,7 +30,7 @@ class TrainConfig(object):
   batch_size = 64
   num_epochs = 50
   summary_interval = 250
-  eval_interval = 250  # must be integer multiple of summary_interval
+  eval_interval = 2000  # must be integer multiple of summary_interval
   lr = 0.01  # learning rate
   reg = 1  # regularization
   momentum = 0.9
