@@ -32,7 +32,7 @@ class TrainConfig(object):
   summary_interval = 250
   eval_interval = 250  # must be integer multiple of summary_interval
   lr = 0.01  # learning rate
-  reg = 5e-4  # regularization
+  reg = 1  # regularization
   momentum = 0.9
   dropout_keep_prob = 1.0
   model_name = 'vgg_16'  # choose model
@@ -232,10 +232,12 @@ def train():
     summ = tf.summary.merge_all()
     saver = tf.train.Saver(max_to_keep=1)
     writer = tf.summary.FileWriter(tflog_path, g)
+    init_trainable = tf.variables_initializer(tf.trainable_variables())
     with tf.Session() as sess:
       init.run()
       if continue_train:
         saver.restore(sess, checkpoint)
+      init_trainable.run()
       coord = tf.train.Coordinator()
       threads = tf.train.start_queue_runners(sess=sess, coord=coord)
       try:
