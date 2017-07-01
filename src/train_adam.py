@@ -33,7 +33,7 @@ class TrainConfig(object):
   num_epochs = 50
   summary_interval = 250
   eval_interval = 2000  # must be integer multiple of summary_interval
-  lr = 0.01  # learning rate
+  lr = 0.1  # learning rate
   reg = 5e-4  # regularization
   momentum = 0.9
   dropout_keep_prob = 0.5
@@ -95,7 +95,7 @@ def optimizer(loss, config):
   """
   lr = tf.Variable(config.lr, trainable=False, dtype=tf.float32)
   global_step = tf.Variable(0, trainable=False, name='global_step')
-  optim = tf.train.AdamOptimizer(lr, epsilon=1e-4)
+  optim = tf.train.AdamOptimizer(lr, epsilon=1e-2)
   train_op = optim.minimize(loss, global_step=global_step)
 
   return train_op, global_step, lr
