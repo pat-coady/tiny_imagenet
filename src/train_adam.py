@@ -95,7 +95,7 @@ def optimizer(loss, config):
   """
   lr = tf.Variable(config.lr, trainable=False, dtype=tf.float32)
   global_step = tf.Variable(0, trainable=False, name='global_step')
-  optim = tf.train.AdamOptimizer(lr, epsilon=1e-2)
+  optim = tf.train.AdamOptimizer(lr, epsilon=1e-1)
   train_op = optim.minimize(loss, global_step=global_step)
 
   return train_op, global_step, lr
