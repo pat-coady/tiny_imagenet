@@ -106,8 +106,9 @@ def read_image(filename_q, mode):
   if mode == 'train':
     img = tf.random_crop(img, np.array([56, 56, 3]))
     img = tf.image.random_flip_left_right(img)
-    img = tf.image.random_hue(img, 0.05)
-    img = tf.image.random_saturation(img, 0.5, 2.0)
+    # val accuracy improved without hue and saturation adjust
+    # img = tf.image.random_hue(img, 0.05)
+    # img = tf.image.random_saturation(img, 0.5, 2.0)
   else:
     img = tf.image.crop_to_bounding_box(img, 4, 4, 56, 56)
 
