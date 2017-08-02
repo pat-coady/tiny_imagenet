@@ -25,7 +25,7 @@ Tiny ImageNet is large enough to be a challenging and realistic problem. But not
     a. Smoothed cross-entropy loss
     b. SVM
 
-For more details, see my blog: [Learning Artificial Intelligence](https://pat-coady.github.io).
+For more details, see my blog: [Learning Artificial Intelligence](http://learningai.io).
 
 ## Quick Tour of Repository
 
